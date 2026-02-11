@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Niiaks/campusCart/internal/config"
+	"github.com/Niiaks/campusCart/internal/database"
 	"github.com/Niiaks/campusCart/internal/logger"
 	"github.com/Niiaks/campusCart/internal/router"
 	"github.com/Niiaks/campusCart/internal/server"
@@ -29,6 +30,11 @@ func main() {
 
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
 
+	if cfg.Primary.Env != "development" {
+		if err := database.Migrate(context.Background(), &log, cfg); err != nil {
+			log.Fatal().Err(err).Msg("failed to migrate database")
+		}
+	}
 	// Initialize server
 	srv, err := server.New(cfg, &log, loggerService)
 	if err != nil {
