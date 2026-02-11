@@ -1,11 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/go-playground/validator/v10"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
@@ -13,12 +11,13 @@ import (
 )
 
 type Config struct {
-	Primary     PrimaryConfig     `koanf:"primary" validate:"required"`
-	Server      ServerConfig      `koanf:"server" validate:"required"`
-	Database    DatabaseConfig    `koanf:"database" validate:"required"`
-	Redis       RedisConfig       `koanf:"redis" validate:"required"`
-	Integration IntegrationConfig `koanf:"integration" validate:"required"`
-	Auth        AuthConfig        `koanf:"auth_config" validate:"required"`
+	Primary       PrimaryConfig        `koanf:"primary" validate:"required"`
+	Server        ServerConfig         `koanf:"server" validate:"required"`
+	Database      DatabaseConfig       `koanf:"database" validate:"required"`
+	Redis         RedisConfig          `koanf:"redis" validate:"required"`
+	Integration   IntegrationConfig    `koanf:"integration" validate:"required"`
+	Auth          AuthConfig           `koanf:"auth_config" validate:"required"`
+	Observability *ObservabilityConfig `koanf:"observability"`
 }
 
 type PrimaryConfig struct {
@@ -76,37 +75,27 @@ func LoadConfig() (*Config, error) {
 
 	err = k.Unmarshal(".", mainConfig)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("could not unmarshal config")
+		return nil, err
 	}
 
 	validate := validator.New()
 
 	err = validate.Struct(mainConfig)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("could not validate config")
+		return nil, err
 	}
 
-	//initialize sentry
-	sentryConfig(mainConfig.Integration.SentryDsn)
+	if mainConfig.Observability == nil {
+		mainConfig.Observability = DefaultObservabilityConfig()
+	}
+
+	// override environment from default
+	mainConfig.Observability.Environment = mainConfig.Primary.Env
+
+	if err = mainConfig.Observability.Validate(); err != nil {
+		return nil, err
+	}
 
 	return mainConfig, nil
 
-}
-
-const serverName = "campusCart"
-
-func sentryConfig(dsn string) {
-	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:              dsn,
-		EnableTracing:    true,
-		TracesSampleRate: 1.0,
-		ServerName:       serverName,
-		// Enable printing of sdk debug messages (*remove)
-		Debug: true,
-		// Adds request headers and ip
-		SendDefaultPII: true,
-	}); err != nil {
-		fmt.Printf("sentry initialization failed")
-		os.Exit(1)
-	}
 }
