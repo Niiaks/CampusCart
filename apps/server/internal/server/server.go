@@ -17,7 +17,7 @@ type Server struct {
 	Config        *config.Config
 	Logger        *zerolog.Logger
 	LoggerService *loggerPkg.LoggerService
-	DB            *database.Database
+	DB            database.Pinger
 	httpServer    *http.Server
 }
 
