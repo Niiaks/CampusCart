@@ -3,6 +3,8 @@ module github.com/Niiaks/campusCart
 go 1.25.7
 
 require (
+	github.com/go-chi/chi/v5 v5.2.5
+	github.com/go-chi/cors v1.2.2
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx-zerolog v0.0.0-20230315001418-f978528409eb
@@ -10,7 +12,9 @@ require (
 	github.com/knadh/koanf v1.5.0
 	github.com/newrelic/go-agent/v3 v3.42.0
 	github.com/newrelic/go-agent/v3/integrations/logcontext-v2/nrzerolog v1.0.2
+	github.com/newrelic/go-agent/v3/integrations/nrgochi v1.0.2
 	github.com/newrelic/go-agent/v3/integrations/nrpgx5 v1.3.3
+	github.com/pkg/errors v0.9.1
 	golang.org/x/text v0.32.0
 )
 
@@ -25,7 +29,6 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
