@@ -14,6 +14,7 @@ require (
 	github.com/newrelic/go-agent/v3/integrations/logcontext-v2/nrzerolog v1.0.2
 	github.com/newrelic/go-agent/v3/integrations/nrgochi v1.0.2
 	github.com/newrelic/go-agent/v3/integrations/nrpgx5 v1.3.3
+	github.com/newrelic/go-agent/v3/integrations/nrpkgerrors v1.1.0
 	github.com/pkg/errors v0.9.1
 	golang.org/x/text v0.32.0
 )
