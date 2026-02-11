@@ -10,6 +10,7 @@ import (
 
 	"github.com/Niiaks/campusCart/internal/config"
 	"github.com/Niiaks/campusCart/internal/logger"
+	"github.com/Niiaks/campusCart/internal/router"
 	"github.com/Niiaks/campusCart/internal/server"
 )
 
@@ -34,6 +35,9 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to initialize server")
 	}
 
+	r := router.NewRouter()
+
+	srv.SetupHTTPServer(r)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 
 	// Start server
