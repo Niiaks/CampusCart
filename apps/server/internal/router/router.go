@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Niiaks/campusCart/internal/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 )
 
-func NewRouter() chi.Router {
+func NewRouter(h *handler.Handlers) chi.Router {
 
 	r := chi.NewRouter()
 
@@ -28,5 +29,8 @@ func NewRouter() chi.Router {
 		}),
 	))
 
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/health", h.Health.CheckHealth)
+	})
 	return r
 }
