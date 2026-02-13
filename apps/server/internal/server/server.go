@@ -52,7 +52,7 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *loggerPkg.Lo
 	}
 
 	// job service
-	jobService := job.NewJobService(&cfg.Redis, logger)
+	jobService := job.NewJobService(cfg, logger)
 
 	//initialize job handlers
 
