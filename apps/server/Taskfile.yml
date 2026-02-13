@@ -41,7 +41,14 @@ tasks:
     deps: [confirm]
     cmds:
       - echo 'Running up migrations...'
-      - tern migrate -m ./internal/database/migrations --conn-string "postgres://{{.CAMPUS_CART_DATABASE__USER}}:{{.CAMPUS_CART_DATABASE__PASSWORD}}@{{.CAMPUS_CART_DATABASE__HOST}}:{{.CAMPUS_CART_DATABASE__PORT}}/{{.CAMPUS_CART_DATABASE__NAME}}?sslmode={{.CAMPUS_CART_DATABASE__SSL_MODE}}"
+      - tern migrate -m ./internal/database/migrations --conn-string "{{.CAMPUS_CART_DB_DSN}}"
+
+  migrations:down:
+    desc: rollback all database migrations
+    deps: [confirm]
+    cmds:
+      - echo 'Rolling back all migrations...'
+      - tern migrate -m ./internal/database/migrations --conn-string "{{.CAMPUS_CART_DB_DSN}}" -d 0
 
   tidy:
     desc: format all .go files, and tidy and vendor module dependencies
