@@ -1,5 +1,7 @@
 version: "3"
 
+dotenv: [".env"]
+
 vars:
   CAMPUS_CART_DB_DSN: '{{.CAMPUS_CART_DB_DSN | default ""}}'
 
