@@ -14,10 +14,7 @@ tasks:
 
   confirm:
     desc: confirmation prompt
-    cmds:
-      - |
-        echo -n 'Are you sure? [y/N] ' && read ans && [ ${ans:-N} = y ]
-    silent: true
+    prompt: Are you sure you want to continue?
     internal: true
 
   run:
@@ -44,7 +41,7 @@ tasks:
     deps: [confirm]
     cmds:
       - echo 'Running up migrations...'
-      - tern migrate -m ./internal/database/migrations --conn-string {{.BOILERPLATE_DB_DSN}}
+      - tern migrate -m ./internal/database/migrations --conn-string "postgres://{{.CAMPUS_CART_DATABASE__USER}}:{{.CAMPUS_CART_DATABASE__PASSWORD}}@{{.CAMPUS_CART_DATABASE__HOST}}:{{.CAMPUS_CART_DATABASE__PORT}}/{{.CAMPUS_CART_DATABASE__NAME}}?sslmode={{.CAMPUS_CART_DATABASE__SSL_MODE}}"
 
   tidy:
     desc: format all .go files, and tidy and vendor module dependencies
