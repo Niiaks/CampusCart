@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
 	"github.com/rs/zerolog"
@@ -64,7 +65,7 @@ func LoadConfig() (*Config, error) {
 	var k = koanf.New(".")
 
 	err := k.Load(env.Provider("CAMPUS_CART_", ".", func(s string) string {
-		return strings.ToLower(strings.TrimPrefix(s, "CAMPUS_CART_"))
+		return strings.ReplaceAll(strings.ToLower(strings.TrimPrefix(s, "CAMPUS_CART_")), "__", ".")
 	}), nil)
 
 	if err != nil {
@@ -73,7 +74,7 @@ func LoadConfig() (*Config, error) {
 
 	mainConfig := &Config{}
 
-	err = k.Unmarshal(".", mainConfig)
+	err = k.Unmarshal("", mainConfig)
 	if err != nil {
 		return nil, err
 	}
