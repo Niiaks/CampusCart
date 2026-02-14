@@ -23,32 +23,31 @@ const Navbar = () => {
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold tracking-[0.2em] text-brand-foreground/70">
-              CampusCart
+              campusCart
             </span>
             <Button
               variant="ghost"
               size="xs"
-              className="h-7 w-fit gap-1 rounded-full bg-brand-foreground/10 px-2 text-xs font-medium text-brand-foreground hover:bg-brand-foreground/15"
+              className="h-5 w-fit gap-1 rounded-full bg-brand-foreground/10 px-2 text-xs font-medium text-brand-foreground hover:bg-brand-foreground/15"
             >
-              <MapPin className="size-3.5" />
               Legon
             </Button>
           </div>
         </div>
 
-        <div className="order-3 w-full flex-1 md:order-none md:flex">
+        <div className="order-3 w-full flex-1 md:order-0 md:flex">
           <label className="relative flex w-full items-center">
-            <Search className="pointer-events-none absolute left-4 size-4 text-brand-foreground/70" />
+            <Search className="pointer-events-none absolute left-4 size-4 text-brand/80" />
             <Input
               placeholder="Search textbooks, electronics, dorm essentials..."
-              className="h-11 w-full rounded-2xl border-none bg-white/15 pl-12 text-base font-medium text-brand-foreground placeholder:text-brand-foreground/70 focus-visible:ring-brand-foreground/40"
+              className="h-11 w-full rounded-2xl border border-transparent bg-white pl-12 text-base font-semibold text-brand shadow-lg shadow-black/5 placeholder:text-brand/70 focus-visible:border-brand focus-visible:ring-brand/30"
             />
           </label>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
           <Button className="hidden bg-white text-brand hover:bg-white/90 md:inline-flex">
-            Sell on CampusCart
+            Sell on campusCart
           </Button>
           <Button
             variant="ghost"
@@ -80,10 +79,9 @@ const Navbar = () => {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>My Profile</DropdownMenuItem>
-              <DropdownMenuItem>My Listings</DropdownMenuItem>
-              <DropdownMenuItem>Dashboard</DropdownMenuItem>
-              <DropdownMenuItem>Performance</DropdownMenuItem>
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Orders</DropdownMenuItem>
+              <DropdownMenuItem>Saved listings</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Sign out</DropdownMenuItem>
             </DropdownMenuContent>
