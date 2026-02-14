@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ListingCard, { dummyListings, type Listing } from "../../ui/ListingCard";
 
 interface ListingGridProps {

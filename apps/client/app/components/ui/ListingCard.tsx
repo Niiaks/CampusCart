@@ -1,6 +1,7 @@
 import { Bookmark, MapPin } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export interface Listing {
   id: number;
@@ -125,72 +126,74 @@ const conditionColor: Record<string, string> = {
 
 const ListingCard = ({ listing }: { listing: Listing }) => {
   return (
-    <article className="group flex w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-lg">
-      {/* Image */}
-      <div className="relative aspect-square w-full overflow-hidden bg-muted">
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-
-        {/* Condition badge */}
-        <span
-          className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${conditionColor[listing.condition] ?? "bg-muted text-muted-foreground"}`}
-        >
-          {listing.condition}
-        </span>
-
-        {/* Save button */}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="absolute right-2.5 top-2.5 rounded-full bg-white/80 text-foreground/70 backdrop-blur hover:bg-white hover:text-brand"
-          aria-label="Save listing"
-        >
-          <Bookmark className="size-4" />
-        </Button>
-      </div>
-
-      {/* Details */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
-        {/* Price & Title */}
-        <div className="space-y-0.5">
-          <p className="text-base font-bold text-foreground">
-            GH₵ {listing.price.toLocaleString()}
-          </p>
-          <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground/80">
-            {listing.title}
-          </h3>
-        </div>
-
-        {/* Description */}
-        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-          {listing.description}
-        </p>
-
-        {/* Location */}
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <MapPin className="size-3 shrink-0" />
-          <span className="truncate">{listing.location}</span>
-        </div>
-
-        {/* Seller & Time */}
-        <div className="mt-auto flex items-center gap-2 border-t border-border/40 pt-2">
+    <Link href={`/${listing.id}`}>
+      <article className="group flex w-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-lg">
+        {/* Image */}
+        <div className="relative aspect-square w-full overflow-hidden bg-muted">
           <img
-            src={listing.seller.avatar}
-            alt={listing.seller.name}
-            className="size-6 rounded-full object-cover ring-1 ring-border"
+            src={listing.image}
+            alt={listing.title}
+            className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          <span className="truncate text-xs font-medium text-foreground/70">
-            {listing.seller.name}
+
+          {/* Condition badge */}
+          <span
+            className={`absolute left-2.5 top-2.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${conditionColor[listing.condition] ?? "bg-muted text-muted-foreground"}`}
+          >
+            {listing.condition}
           </span>
-          <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
-            {listing.timeAgo}
-          </span>
+
+          {/* Save button */}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="absolute right-2.5 top-2.5 rounded-full bg-white/80 text-foreground/70 backdrop-blur hover:bg-white hover:text-brand"
+            aria-label="Save listing"
+          >
+            <Bookmark className="size-4" />
+          </Button>
         </div>
-      </div>
-    </article>
+
+        {/* Details */}
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          {/* Price & Title */}
+          <div className="space-y-0.5">
+            <p className="text-base font-bold text-foreground">
+              GH₵ {listing.price.toLocaleString()}
+            </p>
+            <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground/80">
+              {listing.title}
+            </h3>
+          </div>
+
+          {/* Description */}
+          <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+            {listing.description}
+          </p>
+
+          {/* Location */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="size-3 shrink-0" />
+            <span className="truncate">{listing.location}</span>
+          </div>
+
+          {/* Seller & Time */}
+          <div className="mt-auto flex items-center gap-2 border-t border-border/40 pt-2">
+            <img
+              src={listing.seller.avatar}
+              alt={listing.seller.name}
+              className="size-6 rounded-full object-cover ring-1 ring-border"
+            />
+            <span className="truncate text-xs font-medium text-foreground/70">
+              {listing.seller.name}
+            </span>
+            <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
+              {listing.timeAgo}
+            </span>
+          </div>
+        </div>
+      </article>
+    </Link>
   );
 };
 

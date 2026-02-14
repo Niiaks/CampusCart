@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import ListingCard, { dummyListings, type Listing } from "../../ui/ListingCard";
+import Link from "next/link";
 
 interface ListingCarouselProps {
   listings?: Listing[];
