@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
   return (
-    <header className="w-full border-b border-border/40 bg-brand text-brand-foreground">
+    <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-border/40 bg-brand/95 text-brand-foreground backdrop-blur">
       <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-full bg-brand-light/60 text-lg font-semibold uppercase text-brand-foreground">
@@ -35,7 +35,7 @@ const Navbar = () => {
           </div>
         </div>
 
-        <div className="order-3 w-full flex-1 md:order-0 md:flex">
+        <div className="order-3 basis-full md:order-0 md:basis-auto md:flex-1">
           <label className="relative flex w-full items-center">
             <Search className="pointer-events-none absolute left-4 size-4 text-brand/80" />
             <Input
