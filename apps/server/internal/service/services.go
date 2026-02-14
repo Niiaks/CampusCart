@@ -1,9 +1,14 @@
 package service
 
-import "github.com/Niiaks/campusCart/internal/server"
+import "github.com/Niiaks/campusCart/internal/repository"
 
 type Service struct {
-	server *server.Server
+	Auth *AuthService
 }
 
-func NewServices(s *server.Server) *Service { return &Service{server: s} }
+func NewServices(repo *repository.Repository) *Service {
+	authService := NewAuthService(repo.User, repo.Session)
+	return &Service{
+		Auth: authService,
+	}
+}
