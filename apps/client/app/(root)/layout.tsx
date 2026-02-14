@@ -1,14 +1,11 @@
-import Navbar from "../components/root/Navbar";
+import Navbar from "../components/layout/Navbar";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    // root nav bar here
     <>
       <Navbar />
       {children}
     </>
-
-    // root footer here
   );
 };
 

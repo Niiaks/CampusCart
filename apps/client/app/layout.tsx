@@ -23,12 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
-        <nav className="text-white bg-brand gap-3">
-          <p className="text-center">Campus Cart</p>
-        </nav>
-        {children}
-      </body>
+      <body className={`${inter.variable} antialiased`}>{children}</body>
     </html>
   );
 }
