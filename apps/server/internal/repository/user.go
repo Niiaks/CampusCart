@@ -18,6 +18,7 @@ type UserRepository struct {
 type UserRepo interface {
 	InsertUser(ctx context.Context, user *model.User) error
 	SelectUser(ctx context.Context, userID string) (*types.UserResponse, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 }
 
 func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
@@ -67,16 +68,17 @@ func (ur *UserRepository) SelectUser(ctx context.Context, userID string) (*types
 	return &user, nil
 }
 
-func (ur *UserRepository) EmailExists(ctx context.Context, email string) (bool, error) {
-	sql := `SELECT COUNT(*) FROM users WHERE email = $1`
+func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	sql := `SELECT id,username,email,password,phone FROM users WHERE email = $1`
 
-	var count int
-
-	err := ur.pool.QueryRow(ctx, sql, email).Scan(&count)
-
+	var user model.User
+	err := ur.pool.QueryRow(ctx, sql, email).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Phone)
 	if err != nil {
-		return false, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	return count > 0, nil
+	return &user, nil
 }
