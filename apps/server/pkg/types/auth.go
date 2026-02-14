@@ -9,6 +9,11 @@ type RegisterUser struct {
 	Phone    string `json:"phone" validate:"required,min=10"`
 }
 
+type LoginUser struct {
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
+}
+
 type UserResponse struct {
 	ID            string    `json:"id"`
 	Username      string    `json:"username" validate:"required,min=3"`
