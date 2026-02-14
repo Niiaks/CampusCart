@@ -17,7 +17,8 @@ type SessionRepository struct {
 
 type SessionRepo interface {
 	CreateSession(ctx context.Context, session *model.Session) error
-	GetUserBySession(ctx context.Context, sessionID string) (string, error)
+	GetUserBySession(ctx context.Context, sessionID string) (*model.User, error)
+	DeleteSession(ctx context.Context, sessionID string) error
 }
 
 func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
@@ -28,7 +29,7 @@ func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
 
 func (sr *SessionRepository) CreateSession(ctx context.Context, session *model.Session) error {
 
-	expiresAt := time.Now().Add(30 * time.Second)
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 
 	sql := `INSERT INTO sessions (user_id, expires_at) VALUES($1,$2) returning id`
 
@@ -58,4 +59,19 @@ func (sr *SessionRepository) GetUserBySession(ctx context.Context, sessionID str
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (sr *SessionRepository) DeleteSession(ctx context.Context, sessionID string) error {
+	sql := `DELETE FROM sessions WHERE id = $1`
+
+	result, err := sr.pool.Exec(ctx, sql, sessionID)
+	if err != nil {
+		return fmt.Errorf("delete session error: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("session not found")
+	}
+
+	return nil
 }
