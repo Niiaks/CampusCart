@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Bookmark, MapPin, Search, UserRound } from "lucide-react";
+import { Bell, Bookmark, Search, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
