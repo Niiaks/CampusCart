@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS brands (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    description TEXT NOT NULL,
+    description TEXT,
     profile_url TEXT,
     banner_url TEXT,
     deleted_at TIMESTAMPTZ,

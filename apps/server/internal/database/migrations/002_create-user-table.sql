@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     email CITEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     phone VARCHAR(20) NOT NULL,
-    role user_role NOT NULL DEFAULT 'buyer',
+    role user_role NOT NULL DEFAULT 'user',
     email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     phone_verified BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
