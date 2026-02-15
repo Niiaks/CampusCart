@@ -1,0 +1,516 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "campusCart API",
+    "description": "The student marketplace API for campusCart. Buy and sell textbooks, electronics, dorm essentials and more.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "campusCart Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Service health checks"
+    },
+    {
+      "name": "Auth",
+      "description": "Authentication & session management"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Check service health",
+        "description": "Returns the health status of the API, database, and Redis connections.",
+        "operationId": "checkHealth",
+        "responses": {
+          "200": {
+            "description": "All services healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more services unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "description": "Creates a new user account and returns the user with a session cookie.",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Session cookie (`session_id`)",
+                "schema": {
+                  "type": "string",
+                  "example": "session_id=abc123; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "description": "Authenticates a user with email and password. Returns user data and sets a session cookie.",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Session cookie (`session_id`)",
+                "schema": {
+                  "type": "string",
+                  "example": "session_id=abc123; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Invalidates the current session and clears the session cookie. Requires authentication.",
+        "operationId": "logout",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Logged out successfully",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cleared session cookie",
+                "schema": {
+                  "type": "string",
+                  "example": "session_id=; Path=/; HttpOnly; SameSite=Lax; Max-Age=-1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current user",
+        "description": "Returns the currently authenticated user's profile. Requires authentication.",
+        "operationId": "getCurrentUser",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session_id",
+        "description": "Session cookie set on login/register. HttpOnly, 7-day expiry."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"],
+            "example": "healthy"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-15T12:00:00Z"
+          },
+          "environment": {
+            "type": "string",
+            "example": "development"
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "database": {
+                "$ref": "#/components/schemas/HealthCheck"
+              },
+              "redis": {
+                "$ref": "#/components/schemas/HealthCheck"
+              }
+            }
+          }
+        },
+        "required": ["status", "timestamp", "environment", "checks"]
+      },
+      "HealthCheck": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"],
+            "example": "healthy"
+          },
+          "response_time": {
+            "type": "string",
+            "example": "1.23ms"
+          },
+          "error": {
+            "type": "string",
+            "description": "Only present when unhealthy"
+          }
+        },
+        "required": ["status", "response_time"]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "example": "kwame_asante"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "example": "securePass123"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 10,
+            "example": "0241234567"
+          }
+        },
+        "required": ["username", "password", "email", "phone"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "example": "securePass123"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "required": ["user"]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "username": {
+            "type": "string",
+            "example": "kwame_asante"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0241234567"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin"],
+            "example": "user"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "example": false
+          },
+          "phone_verified": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "last_active": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-15T12:00:00Z"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "phone",
+          "role",
+          "last_active",
+          "created_at"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "BAD_REQUEST"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed: email is required"
+          },
+          "status": {
+            "type": "integer",
+            "example": 400
+          },
+          "override": {
+            "type": "boolean",
+            "example": false
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "description": "Field-level validation errors (optional)"
+          },
+          "action": {
+            "$ref": "#/components/schemas/Action"
+          }
+        },
+        "required": ["code", "message", "status", "override"]
+      },
+      "FieldError": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "example": "email"
+          },
+          "error": {
+            "type": "string",
+            "example": "email is required"
+          }
+        },
+        "required": ["field", "error"]
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["redirect"],
+            "example": "redirect"
+          },
+          "message": {
+            "type": "string",
+            "example": "Please verify your email"
+          },
+          "value": {
+            "type": "string",
+            "example": "/verify-email"
+          }
+        },
+        "required": ["type", "message", "value"]
+      },
+      "RateLimitError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Rate-limited. Please, slow down."
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

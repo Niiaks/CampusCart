@@ -18,7 +18,7 @@ func NewOpenAPIHandler(s *server.Server) *OpenAPIHandler {
 	}
 }
 
-func (h *OpenAPIHandler) ServeOpenAPIUI(w http.ResponseWriter, r *http.Request) error {
+func (h *OpenAPIHandler) ServeOpenApiUI(w http.ResponseWriter, r *http.Request) error {
 	templateBytes, err := os.ReadFile("static/openapi.html")
 	if err != nil {
 		return fmt.Errorf("failed to read OpenAPI UI template: %w", err)
