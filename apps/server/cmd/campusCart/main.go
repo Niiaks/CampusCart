@@ -68,13 +68,13 @@ func main() {
 
 	// Wait for interrupt signal to gracefully shutdown the server
 	<-ctx.Done()
+	stop()
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout*time.Second)
+	defer cancel()
 
 	if err = srv.Shutdown(ctx); err != nil {
 		log.Fatal().Err(err).Msg("server forced to shutdown")
 	}
-	stop()
-	cancel()
 
 	log.Info().Msg("server exited properly")
 }
