@@ -30,6 +30,16 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 		}),
 	))
 
+	r.Get("/docs", func(w http.ResponseWriter, r *http.Request) {
+		if err := h.OpenAPI.ServeOpenApiUI(w, r); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	// Serve static files (openapi.json, etc.)
+	fileServer := http.FileServer(http.Dir("static"))
+	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
+
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", h.Health.CheckHealth)
 
