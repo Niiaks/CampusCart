@@ -55,14 +55,14 @@ func (ur *UserRepository) InsertUser(ctx context.Context, user *model.User) erro
 }
 
 func (ur *UserRepository) SelectUser(ctx context.Context, userID string) (*types.UserResponse, error) {
-	sql := `SELECT id,username,email,phone,email_verified,last_active,is_active,created_at FROM users WHERE id = $1`
+	sql := `SELECT id,username,email,phone,role,email_verified,last_active,is_active,created_at FROM users WHERE id = $1`
 
 	var user types.UserResponse
-	err := ur.pool.QueryRow(ctx, sql, userID).Scan(&user.ID, &user.Username, &user.Email, &user.Phone, &user.EmailVerified, &user.LastActive, &user.IsActive, &user.CreatedAt)
+	err := ur.pool.QueryRow(ctx, sql, userID).Scan(&user.ID, &user.Username, &user.Email, &user.Phone, &user.Role, &user.EmailVerified, &user.LastActive, &user.IsActive, &user.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("user not found %s", err)
+			return nil, nil
 		}
 		return nil, err
 	}
