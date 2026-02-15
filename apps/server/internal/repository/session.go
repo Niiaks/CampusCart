@@ -15,10 +15,13 @@ type SessionRepository struct {
 	pool *pgxpool.Pool
 }
 
+const sessionDuration = 7 * 24 * time.Hour
+
 type SessionRepo interface {
 	CreateSession(ctx context.Context, session *model.Session) error
 	GetUserBySession(ctx context.Context, sessionID string) (*model.User, error)
 	DeleteSession(ctx context.Context, sessionID string) error
+	RefreshSession(ctx context.Context, sessionID string) error
 }
 
 func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
@@ -29,7 +32,7 @@ func NewSessionRepository(pool *pgxpool.Pool) *SessionRepository {
 
 func (sr *SessionRepository) CreateSession(ctx context.Context, session *model.Session) error {
 
-	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	expiresAt := time.Now().Add(sessionDuration)
 
 	sql := `INSERT INTO sessions (user_id, expires_at) VALUES($1,$2) returning id`
 
@@ -71,6 +74,24 @@ func (sr *SessionRepository) DeleteSession(ctx context.Context, sessionID string
 
 	if result.RowsAffected() == 0 {
 		return fmt.Errorf("session not found")
+	}
+
+	return nil
+}
+
+func (sr *SessionRepository) RefreshSession(ctx context.Context, sessionID string) error {
+	now := time.Now()
+	expiresAt := now.Add(sessionDuration)
+
+	sql := `UPDATE sessions SET last_activity = $1, expires_at = $2, updated_at = $1 WHERE id = $3 AND expires_at > $4`
+
+	result, err := sr.pool.Exec(ctx, sql, now, expiresAt, sessionID, now)
+	if err != nil {
+		return fmt.Errorf("refresh session error: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("session not found or expired")
 	}
 
 	return nil
