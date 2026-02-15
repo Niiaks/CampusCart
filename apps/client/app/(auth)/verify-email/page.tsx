@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +11,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyEmailSchema, type VerifyEmailFormData } from "@/common/schemas";
 import { useVerifyEmail } from "@/hooks/useAuth";
+import type { APIError } from "@/common/types";
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex w-full max-w-md items-center justify-center py-16">
+          <Loader2 className="animate-spin" />
+        </div>
+      }
+    >
+      <VerifyEmailForm />
+    </Suspense>
+  );
+}
+
+function VerifyEmailForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const emailFromQuery = searchParams.get("email") ?? "";
