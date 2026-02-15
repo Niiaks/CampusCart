@@ -28,9 +28,11 @@ func (c CustomValidationErrors) Error() string {
 }
 
 func BindAndValidate(r *http.Request, payload Validatable) error {
-	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
-		message := "Invalid request body"
-		return errs.NewBadRequestError(message, false, nil, nil, nil)
+	if r.Body != nil && r.Body != http.NoBody && r.ContentLength != 0 {
+		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
+			message := "Invalid request body"
+			return errs.NewBadRequestError(message, false, nil, nil, nil)
+		}
 	}
 
 	if msg, fieldErrors := validateStruct(payload); fieldErrors != nil {

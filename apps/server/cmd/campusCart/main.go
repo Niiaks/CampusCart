@@ -12,8 +12,11 @@ import (
 	"github.com/Niiaks/campusCart/internal/database"
 	"github.com/Niiaks/campusCart/internal/handler"
 	"github.com/Niiaks/campusCart/internal/logger"
+	"github.com/Niiaks/campusCart/internal/middleware"
+	"github.com/Niiaks/campusCart/internal/repository"
 	"github.com/Niiaks/campusCart/internal/router"
 	"github.com/Niiaks/campusCart/internal/server"
+	"github.com/Niiaks/campusCart/internal/service"
 )
 
 const DefaultContextTimeout = 30
@@ -42,8 +45,16 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to initialize server")
 	}
 
-	h := handler.NewHandlers(srv)
-	r := router.NewRouter(h)
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(srv.DB.Pool)
+	sessionRepo := repository.NewSessionRepository(srv.DB.Pool)
+
+	// Initialize services
+	authService := service.NewAuthService(userRepo, sessionRepo)
+
+	h := handler.NewHandlers(srv, authService)
+	mw := middleware.NewMiddlewares(srv, sessionRepo)
+	r := router.NewRouter(h, mw)
 
 	srv.SetupHTTPServer(r)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
