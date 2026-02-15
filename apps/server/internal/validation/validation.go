@@ -54,13 +54,17 @@ func extractValidationErrors(err error) (string, []errs.FieldError) {
 	var fieldErrors []errs.FieldError
 	validationErrors, ok := err.(validator.ValidationErrors)
 	if !ok {
-		customValidationErrors := err.(CustomValidationErrors)
-		for _, err := range customValidationErrors {
+		customValidationErrors, ok := err.(CustomValidationErrors)
+		if !ok {
+			return err.Error(), nil
+		}
+		for _, e := range customValidationErrors {
 			fieldErrors = append(fieldErrors, errs.FieldError{
-				Field: err.Field,
-				Error: err.Message,
+				Field: e.Field,
+				Error: e.Message,
 			})
 		}
+		return "Validation failed", fieldErrors
 	}
 
 	for _, err := range validationErrors {

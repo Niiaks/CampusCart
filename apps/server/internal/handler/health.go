@@ -66,7 +66,7 @@ func (h *HealthHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.server.Redis != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(c, 5*time.Second)
 		defer cancel()
 
 		redisStart := time.Now()
@@ -76,6 +76,7 @@ func (h *HealthHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 				"response_time": time.Since(redisStart).String(),
 				"error":         err.Error(),
 			}
+			isHealthy = false
 			logger.Error().Err(err).Dur("response_time", time.Since(redisStart)).Msg("redis health check failed")
 			if h.server.LoggerService != nil && h.server.LoggerService.GetApplication() != nil {
 				h.server.LoggerService.GetApplication().RecordCustomEvent(

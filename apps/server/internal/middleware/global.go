@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Niiaks/campusCart/internal/server"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -29,27 +28,36 @@ func NewGlobalMiddlewares(s *server.Server) *GlobalMiddlewares {
 
 func (global *GlobalMiddlewares) CORS() func(http.Handler) http.Handler {
 	return cors.Handler(cors.Options{
-		AllowedOrigins: global.server.Config.Server.CorsAllowedOrigins,
-		AllowedMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
-		ExposedHeaders: []string{"X-Request-ID"},
-		MaxAge:         300,
+		AllowedOrigins:   global.server.Config.Server.CorsAllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
+		ExposedHeaders:   []string{"X-Request-ID"},
+		AllowCredentials: true,
+		MaxAge:           300,
 	})
 }
 
 // responseRecorder wraps http.ResponseWriter to capture status code and size
 type responseRecorder struct {
 	http.ResponseWriter
-	statusCode int
-	size       int
+	statusCode    int
+	size          int
+	headerWritten bool
 }
 
 func (r *responseRecorder) WriteHeader(statusCode int) {
+	if r.headerWritten {
+		return
+	}
+	r.headerWritten = true
 	r.statusCode = statusCode
 	r.ResponseWriter.WriteHeader(statusCode)
 }
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
+	if !r.headerWritten {
+		r.WriteHeader(http.StatusOK)
+	}
 	size, err := r.ResponseWriter.Write(b)
 	r.size += size
 	return size, err
@@ -254,14 +262,8 @@ func (global *GlobalMiddlewares) MethodNotAllowedHandler() http.HandlerFunc {
 
 // isResponseWritten checks if the response has already been written
 func isResponseWritten(w http.ResponseWriter) bool {
-	// Check if we can still write headers (response not committed)
-	// This is a bit hacky but works with standard ResponseWriter
-	_, ok := w.(middleware.WrapResponseWriter)
-	if ok {
-		return false
+	if rec, ok := w.(*responseRecorder); ok {
+		return rec.headerWritten
 	}
-	// For standard ResponseWriter, assume not written if we can set a test header
-	// (this is removed immediately)
-	w.Header().Del("X-Response-Check")
 	return false
 }

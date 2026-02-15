@@ -16,14 +16,22 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 	r := chi.NewRouter()
 
 	//Global middleware
-	r.Use(middleware.RequestID)
+	r.Use(customMiddleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	r.Use(mw.Global.CORS())
+	r.Use(mw.Tracing.NewRelicMiddleware())
+	r.Use(mw.ContextEnhancer.EnhanceContext)
+	r.Use(mw.Global.RequestLogger())
 	r.Use(mw.Global.Recover())
+	r.Use(mw.Global.Secure())
+
+	// Custom error handlers for consistent JSON responses
+	r.NotFound(mw.Global.NotFoundHandler())
+	r.MethodNotAllowed(mw.Global.MethodNotAllowedHandler())
 
 	//rate limit
 	r.Use(httprate.Limit(
-		10,
+		100,
 		time.Minute,
 		httprate.WithLimitHandler(func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error": "Rate-limited. Please, slow down."}`, http.StatusTooManyRequests)

@@ -82,7 +82,7 @@ func (h *AuthHandler) Logout() http.HandlerFunc {
 		sessionID := middleware.GetSessionID(r.Context())
 
 		if err := h.authService.Logout(r.Context(), sessionID); err != nil {
-			return errs.NewInternalServerError()
+			return err
 		}
 
 		// Clear the session cookie
@@ -109,7 +109,7 @@ func (h *AuthHandler) GetCurrentUser() http.HandlerFunc {
 
 		userResponse, err := h.authService.GetCurrentUser(r.Context(), user.ID)
 		if err != nil {
-			return nil, errs.NewInternalServerError()
+			return nil, err
 		}
 
 		return userResponse, nil

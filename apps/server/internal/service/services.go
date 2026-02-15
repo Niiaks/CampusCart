@@ -14,5 +14,6 @@ func NewServices(repo *repository.Repository, job *job.JobService) *Service {
 	authService := NewAuthService(repo.User, repo.Session, job)
 	return &Service{
 		Auth: authService,
+		Job:  job,
 	}
 }
