@@ -119,6 +119,13 @@ func (global *GlobalMiddlewares) Recover() func(http.Handler) http.Handler {
 				if rvr := recover(); rvr != nil {
 					logger := GetLogger(r.Context())
 
+					// Check if panic value is an error we should handle properly
+					if err, ok := rvr.(error); ok {
+						global.handleError(w, r, err)
+						return
+					}
+
+					// Unexpected panic — log with stack trace
 					logger.Error().
 						Interface("panic", rvr).
 						Bytes("stack", debug.Stack()).
