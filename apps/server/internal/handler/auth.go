@@ -54,15 +54,26 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 }
 
 func (h *AuthHandler) Register() http.HandlerFunc {
-	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.RegisterUser) (*types.LoginResponse, error) {
+	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.RegisterUser) (*types.RegisterResponse, error) {
 		resp, err := h.authService.Register(r.Context(), req)
+		if err != nil {
+			return nil, errs.NewBadRequestError(err.Error(), false, nil, nil, nil)
+		}
+
+		return resp, nil
+	}, http.StatusCreated, func() *types.RegisterUser { return &types.RegisterUser{} })
+}
+
+func (h *AuthHandler) VerifyEmail() http.HandlerFunc {
+	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.VerifyEmailRequest) (*types.LoginResponse, error) {
+		resp, err := h.authService.VerifyEmail(r.Context(), req)
 		if err != nil {
 			return nil, errs.NewBadRequestError(err.Error(), false, nil, nil, nil)
 		}
 
 		h.setSessionCookie(w, resp.SessionID)
 		return resp, nil
-	}, http.StatusCreated, func() *types.RegisterUser { return &types.RegisterUser{} })
+	}, http.StatusOK, func() *types.VerifyEmailRequest { return &types.VerifyEmailRequest{} })
 }
 
 // Logout requires the Authenticate middleware (session ID comes from context).

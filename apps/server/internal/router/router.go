@@ -46,6 +46,7 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 		// Public auth routes
 		r.Post("/auth/login", h.Auth.Login())
 		r.Post("/auth/register", h.Auth.Register())
+		r.Post("/auth/verify-email", h.Auth.VerifyEmail())
 
 		// Protected auth routes
 		r.Group(func(r chi.Router) {
