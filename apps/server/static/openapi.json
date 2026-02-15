@@ -59,7 +59,7 @@
       "post": {
         "tags": ["Auth"],
         "summary": "Register a new user",
-        "description": "Creates a new user account and returns the user with a session cookie.",
+        "description": "Creates a new user account and sends a verification code to the provided email. The user must verify their email before they can log in.",
         "operationId": "register",
         "requestBody": {
           "required": true,
@@ -73,7 +73,57 @@
         },
         "responses": {
           "201": {
-            "description": "User registered successfully",
+            "description": "User registered successfully, verification email sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Verify email address",
+        "description": "Verifies the user's email with the 6-digit code sent during registration. On success, creates a session and returns user data with a session cookie.",
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified, session created",
             "headers": {
               "Set-Cookie": {
                 "description": "Session cookie (`session_id`)",
@@ -92,7 +142,7 @@
             }
           },
           "400": {
-            "description": "Validation error or bad request",
+            "description": "Invalid or expired verification code",
             "content": {
               "application/json": {
                 "schema": {
@@ -376,6 +426,33 @@
           }
         },
         "required": ["user"]
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "registration successful, please check your email for a verification code"
+          }
+        },
+        "required": ["message"]
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "example": "482913"
+          }
+        },
+        "required": ["email", "code"]
       },
       "UserResponse": {
         "type": "object",
