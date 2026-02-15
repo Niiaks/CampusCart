@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Bookmark, Search, UserRound } from "lucide-react";
+import Link from "next/link";
+import {
+  Bell,
+  Bookmark,
+  LogIn,
+  LogOut,
+  Search,
+  UserPlus,
+  UserRound,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +21,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useAuth, useLogout } from "@/hooks/useAuth";
 
 const Navbar = () => {
+  const { data: user } = useAuth();
+  const { mutate: logout } = useLogout();
   return (
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-border/40 bg-brand/95 text-brand-foreground backdrop-blur">
       <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -77,13 +89,37 @@ const Navbar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Orders</DropdownMenuItem>
-              <DropdownMenuItem>Saved listings</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Sign out</DropdownMenuItem>
+              {user ? (
+                <>
+                  <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>My Brand</DropdownMenuItem>
+                  <DropdownMenuItem>Feedback</DropdownMenuItem>
+                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => logout()}>
+                    <LogOut className="size-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuLabel>Get started</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/login">
+                      <LogIn className="size-4" />
+                      Sign in
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/register">
+                      <UserPlus className="size-4" />
+                      Sign up
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
