@@ -50,7 +50,7 @@ func main() {
 	sessionRepo := repository.NewSessionRepository(srv.DB.Pool)
 
 	// Initialize services
-	authService := service.NewAuthService(userRepo, sessionRepo)
+	authService := service.NewAuthService(userRepo, sessionRepo, srv.Job)
 
 	h := handler.NewHandlers(srv, authService)
 	mw := middleware.NewMiddlewares(srv, sessionRepo)

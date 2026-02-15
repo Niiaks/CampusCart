@@ -9,6 +9,7 @@ import (
 
 	"github.com/Niiaks/campusCart/internal/config"
 	"github.com/Niiaks/campusCart/internal/database"
+	emailLib "github.com/Niiaks/campusCart/internal/lib/email"
 	"github.com/Niiaks/campusCart/internal/lib/job"
 	loggerPkg "github.com/Niiaks/campusCart/internal/logger"
 	"github.com/newrelic/go-agent/v3/integrations/nrredis-v9"
@@ -54,10 +55,11 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *loggerPkg.Lo
 	// job service
 	jobService := job.NewJobService(cfg, logger)
 
-	//initialize job handlers
+	// email client
+	emailClient := emailLib.NewClient(&cfg.Integration, logger)
 
 	// Start job server
-	if err := jobService.Start(); err != nil {
+	if err := jobService.Start(emailClient); err != nil {
 		return nil, err
 	}
 	server := &Server{
