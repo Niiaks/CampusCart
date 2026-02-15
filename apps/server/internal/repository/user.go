@@ -19,6 +19,7 @@ type UserRepo interface {
 	InsertUser(ctx context.Context, user *model.User) error
 	SelectUser(ctx context.Context, userID string) (*types.UserResponse, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
+	VerifyUserEmail(ctx context.Context, email string) error
 }
 
 func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
@@ -36,10 +37,10 @@ func (ur *UserRepository) InsertUser(ctx context.Context, user *model.User) erro
 	}
 	defer txn.Rollback(ctx)
 
-	userSql := `INSERT INTO users(username,email,password,phone) VALUES($1,$2,$3,$4) RETURNING id`
+	userSql := `INSERT INTO users(username,email,password,phone,email_verification_code,email_verification_expires_at) VALUES($1,$2,$3,$4,$5,$6) RETURNING id`
 	brandSql := `INSERT INTO brands(name,seller_id) VALUES($1,$2)`
 
-	err = txn.QueryRow(ctx, userSql, user.Username, user.Email, user.Password, user.Phone).Scan(&user.ID)
+	err = txn.QueryRow(ctx, userSql, user.Username, user.Email, user.Password, user.Phone, user.EmailVerificationCode, user.EmailVerificationCodeExpiresAt).Scan(&user.ID)
 	if err != nil {
 		return fmt.Errorf("error creating user: %w", err)
 	}
@@ -69,10 +70,10 @@ func (ur *UserRepository) SelectUser(ctx context.Context, userID string) (*types
 }
 
 func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
-	sql := `SELECT id,username,email,password,phone FROM users WHERE email = $1`
+	sql := `SELECT id,username,email,password,phone,email_verified,email_verification_code,email_verification_expires_at FROM users WHERE email = $1`
 
 	var user model.User
-	err := ur.pool.QueryRow(ctx, sql, email).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Phone)
+	err := ur.pool.QueryRow(ctx, sql, email).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Phone, &user.EmailVerified, &user.EmailVerificationCode, &user.EmailVerificationCodeExpiresAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -81,4 +82,10 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 	}
 
 	return &user, nil
+}
+
+func (ur *UserRepository) VerifyUserEmail(ctx context.Context, email string) error {
+	sql := `UPDATE users SET email_verified = TRUE, email_verification_code = NULL, email_verification_expires_at = NULL WHERE email = $1`
+	_, err := ur.pool.Exec(ctx, sql, email)
+	return err
 }
