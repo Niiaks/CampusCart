@@ -86,9 +86,9 @@
   --secondary: #f4f3ff;
   --secondary-foreground: #1e1b4b;
 
-  /* Accent – teal (complements purple) */
-  --accent: #0d9488;
-  --accent-foreground: #ffffff;
+  /* Accent – subtle brand tint */
+  --accent: #ede9ff;
+  --accent-foreground: #1e1b4b;
 
   /* Muted */
   --muted: #f5f5f5;
@@ -151,9 +151,9 @@
   --secondary: #1e1b4b;
   --secondary-foreground: #e0e7ff;
 
-  /* Accent – teal */
-  --accent: #2dd4bf;
-  --accent-foreground: #0a0a0a;
+  /* Accent – subtle brand tint */
+  --accent: #2a2660;
+  --accent-foreground: #e0e7ff;
 
   /* Muted */
   --muted: #262626;
