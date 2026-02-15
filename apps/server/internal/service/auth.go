@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand/v2"
 	"strings"
 	"time"
 
+	errs "github.com/Niiaks/campusCart/internal/err"
 	"github.com/Niiaks/campusCart/internal/lib/job"
 	"github.com/Niiaks/campusCart/internal/model"
 	"github.com/Niiaks/campusCart/internal/repository"
@@ -39,16 +39,16 @@ func (auth *AuthService) Login(ctx context.Context, request *types.LoginUser) (*
 	}
 
 	if user == nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errs.NewUnauthorizedError("invalid credentials", false)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
-		return nil, errors.New("invalid credentials")
+		return nil, errs.NewUnauthorizedError("invalid credentials", false)
 	}
 
 	// check if email is verified before logging in
 	if user.EmailVerified == false {
-		return nil, errors.New("email not verified, verify to continue")
+		return nil, errs.NewUnauthorizedError("email not verified, verify to continue", false)
 	}
 
 	session := &model.Session{
@@ -78,11 +78,11 @@ func (auth *AuthService) Register(ctx context.Context, request *types.RegisterUs
 		return nil, err
 	}
 	if existing != nil {
-		return nil, errors.New("email already in use")
+		return nil, errs.NewBadRequestError("email already in use", false, nil, nil, nil)
 	}
 
 	if !isValidEmail(request.Email) {
-		return nil, errors.New("invalid email. Student email required")
+		return nil, errs.NewBadRequestError("invalid email. Student email required", false, nil, nil, nil)
 	}
 	hashed, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -98,8 +98,8 @@ func (auth *AuthService) Register(ctx context.Context, request *types.RegisterUs
 		Email:                          request.Email,
 		Password:                       string(hashed),
 		Phone:                          request.Phone,
-		EmailVerificationCode:          emailVerificationCode,
-		EmailVerificationCodeExpiresAt: expiresAt,
+		EmailVerificationCode:          &emailVerificationCode,
+		EmailVerificationCodeExpiresAt: &expiresAt,
 	}
 
 	if err := auth.userRepo.InsertUser(ctx, user); err != nil {
@@ -127,19 +127,19 @@ func (auth *AuthService) VerifyEmail(ctx context.Context, request *types.VerifyE
 		return nil, err
 	}
 	if user == nil {
-		return nil, errors.New("user not found")
+		return nil, errs.NewBadRequestError("user not found", false, nil, nil, nil)
 	}
 
 	if user.EmailVerified {
-		return nil, errors.New("email already verified")
+		return nil, errs.NewBadRequestError("email already verified", false, nil, nil, nil)
 	}
 
-	if user.EmailVerificationCode != request.Code {
-		return nil, errors.New("invalid verification code")
+	if user.EmailVerificationCode == nil || *user.EmailVerificationCode != request.Code {
+		return nil, errs.NewBadRequestError("invalid verification code", false, nil, nil, nil)
 	}
 
-	if time.Now().After(user.EmailVerificationCodeExpiresAt) {
-		return nil, errors.New("verification code has expired")
+	if user.EmailVerificationCodeExpiresAt == nil || time.Now().After(*user.EmailVerificationCodeExpiresAt) {
+		return nil, errs.NewBadRequestError("verification code has expired", false, nil, nil, nil)
 	}
 
 	// Mark email as verified

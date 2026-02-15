@@ -45,7 +45,7 @@ func (h *AuthHandler) Login() http.HandlerFunc {
 	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.LoginUser) (*types.LoginResponse, error) {
 		resp, err := h.authService.Login(r.Context(), req)
 		if err != nil {
-			return nil, errs.NewUnauthorizedError(err.Error(), false)
+			return nil, err
 		}
 
 		h.setSessionCookie(w, resp.SessionID)
@@ -57,7 +57,7 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.RegisterUser) (*types.RegisterResponse, error) {
 		resp, err := h.authService.Register(r.Context(), req)
 		if err != nil {
-			return nil, errs.NewBadRequestError(err.Error(), false, nil, nil, nil)
+			return nil, err
 		}
 
 		return resp, nil
@@ -68,7 +68,7 @@ func (h *AuthHandler) VerifyEmail() http.HandlerFunc {
 	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.VerifyEmailRequest) (*types.LoginResponse, error) {
 		resp, err := h.authService.VerifyEmail(r.Context(), req)
 		if err != nil {
-			return nil, errs.NewBadRequestError(err.Error(), false, nil, nil, nil)
+			return nil, err
 		}
 
 		h.setSessionCookie(w, resp.SessionID)
