@@ -47,9 +47,9 @@ func (c *Client) SendEmail(to, subject string, templateName Template, data map[s
 
 	sent, err := c.client.Emails.Send(params)
 	if err != nil {
-		return fmt.Errorf("Error in sending email: %s", err)
+		return fmt.Errorf("error sending email: %w", err)
 	}
 
-	c.logger.Info().Any("resend email", sent)
+	c.logger.Info().Any("resend_email", sent).Msg("email sent successfully")
 	return nil
 }
