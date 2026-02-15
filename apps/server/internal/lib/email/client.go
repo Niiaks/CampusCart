@@ -38,8 +38,9 @@ func (c *Client) SendEmail(to, subject string, templateName Template, data map[s
 	}
 
 	params := &resend.SendEmailRequest{
-		From:    fmt.Sprintf("%s <%s>", "CampusCart", "onboarding@resend.dev"),
-		To:      []string{to},
+		From: fmt.Sprintf("%s <%s>", "CampusCart", "onboarding@resend.dev"),
+		// for testing purposes --FIX when domain available
+		To:      []string{"juniorpappoe@gmail.com"},
 		Subject: subject,
 		Html:    body.String(),
 	}
