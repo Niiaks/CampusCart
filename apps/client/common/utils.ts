@@ -1,9 +1,12 @@
 import { AxiosError } from "axios";
+import type { APIError } from "@/common/types";
 
 export function handleError(error: unknown): never {
   if (error instanceof AxiosError && error.response?.data) {
-    const apiError = error.response.data as APIError;
-    throw apiError;
+    const data = error.response.data;
+    if (typeof data === "object" && data !== null && "code" in data) {
+      throw data as APIError;
+    }
   }
   throw {
     code: "UNKNOWN_ERROR",

@@ -8,7 +8,7 @@ import Section from "../components/sections/Home/section";
 
 const Home = () => {
   const { data: user } = useAuth();
-  console.log("the user is", user);
+
   return (
     <main className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 sm:px-6 lg:px-8">
       <Section LeadTitle="Trending Categories">

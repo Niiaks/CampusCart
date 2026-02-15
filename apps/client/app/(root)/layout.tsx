@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
 
-const layout = ({ children }: { children: React.ReactNode }) => {
+const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
@@ -22,4 +22,4 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default layout;
+export default RootLayout;

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { registerSchema, type RegisterFormData } from "@/common/schemas";
 import { useRegister } from "@/hooks/useAuth";
+import type { APIError } from "@/common/types";
 
 export default function RegisterPage() {
   const router = useRouter();

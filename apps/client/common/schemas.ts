@@ -21,7 +21,7 @@ export const registerSchema = z.object({
   phone: z
     .string()
     .min(1, "Phone number is required")
-    .min(10, "Phone number must be at least 10 digits"),
+    .regex(/^\d{10,15}$/, "Enter a valid phone number"),
 });
 
 export const verifyEmailSchema = z.object({
@@ -29,7 +29,7 @@ export const verifyEmailSchema = z.object({
   code: z
     .string()
     .min(1, "Verification code is required")
-    .length(6, "Code must be exactly 6 digits"),
+    .regex(/^\d{6}$/, "Code must be exactly 6 digits"),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;

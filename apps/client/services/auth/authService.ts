@@ -1,3 +1,8 @@
+import type {
+  LoginRequest,
+  RegisterRequest,
+  VerifyEmailRequest,
+} from "@/common/types";
 import { handleError } from "@/common/utils";
 import { API_URL } from "@/constants/constants";
 import axios from "axios";
@@ -45,7 +50,7 @@ export const authService = {
   },
   logout: async () => {
     try {
-      await axios.post(`${API_URL}/auth/logout`, {
+      await axios.post(`${API_URL}/auth/logout`, null, {
         withCredentials: true,
       });
     } catch (error) {

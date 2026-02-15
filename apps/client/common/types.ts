@@ -1,20 +1,21 @@
-interface LoginRequest {
+export interface LoginRequest {
   email: string;
   password: string;
 }
 
-interface RegisterRequest {
+export interface RegisterRequest {
   username: string;
   email: string;
   password: string;
   phone: string;
 }
 
-interface VerifyEmailRequest {
+export interface VerifyEmailRequest {
   email: string;
   code: string;
 }
-interface APIError {
+
+export interface APIError {
   code: string;
   message: string;
   status: number;
@@ -23,7 +24,7 @@ interface APIError {
   action?: { type: string; message: string; value: string };
 }
 
-interface User {
+export interface User {
   id: string;
   username: string;
   role: string;
@@ -31,6 +32,6 @@ interface User {
   phone: string;
   email_verified: boolean;
   is_active: boolean;
-  last_active: Date;
-  created_at: Date;
+  last_active: string;
+  created_at: string;
 }
