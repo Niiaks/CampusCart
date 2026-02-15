@@ -20,7 +20,7 @@ type Server struct {
 	Config        *config.Config
 	Logger        *zerolog.Logger
 	LoggerService *loggerPkg.LoggerService
-	DB            database.Pinger
+	DB            *database.Database
 	Redis         *redis.Client
 	Job           *job.JobService
 	httpServer    *http.Server
