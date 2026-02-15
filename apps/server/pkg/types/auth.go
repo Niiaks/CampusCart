@@ -28,6 +28,19 @@ type LoginUser struct {
 	Email    string `json:"email" validate:"required,email"`
 }
 
+type VerifyEmailRequest struct {
+	Email string `json:"email" validate:"required,email"`
+	Code  string `json:"code" validate:"required,len=6"`
+}
+
+func (v *VerifyEmailRequest) Validate() error {
+	return validate.Struct(v)
+}
+
+type RegisterResponse struct {
+	Message string `json:"message"`
+}
+
 type LoginResponse struct {
 	SessionID string        `json:"-"`
 	User      *UserResponse `json:"user"`
