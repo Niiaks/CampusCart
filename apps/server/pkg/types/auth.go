@@ -45,3 +45,10 @@ type UserResponse struct {
 	LastActive    time.Time `json:"last_active"`
 	CreatedAt     time.Time `json:"created_at"`
 }
+
+// EmptyRequest is used for endpoints that don't require a request body.
+type EmptyRequest struct{}
+
+func (e *EmptyRequest) Validate() error {
+	return nil
+}
