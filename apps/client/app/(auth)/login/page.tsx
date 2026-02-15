@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { loginSchema, type LoginFormData } from "@/common/schemas";
 import { useLogin } from "@/hooks/useAuth";
+import type { APIError } from "@/common/types";
 
 export default function LoginPage() {
   const router = useRouter();
