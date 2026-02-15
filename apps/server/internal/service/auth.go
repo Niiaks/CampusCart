@@ -47,7 +47,7 @@ func (auth *AuthService) Login(ctx context.Context, request *types.LoginUser) (*
 	}
 
 	// check if email is verified before logging in
-	if user.EmailVerified == false {
+	if !user.EmailVerified {
 		return nil, errs.NewUnauthorizedError("email not verified, verify to continue", false)
 	}
 
@@ -189,9 +189,8 @@ func generateVerificationCode() string {
 // could use student db api to check in the future if need be
 func isValidEmail(email string) bool {
 	parts := strings.Split(email, "@")
-
-	if parts[1] == "st.ug.edu.gh" {
-		return true
+	if len(parts) != 2 {
+		return false
 	}
-	return false
+	return parts[1] == "st.ug.edu.gh"
 }
