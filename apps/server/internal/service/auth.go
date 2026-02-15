@@ -104,3 +104,7 @@ func (auth *AuthService) Register(ctx context.Context, request *types.RegisterUs
 func (auth *AuthService) Logout(ctx context.Context, sessionID string) error {
 	return auth.sessionRepo.DeleteSession(ctx, sessionID)
 }
+
+func (auth *AuthService) GetCurrentUser(ctx context.Context, userID string) (*types.UserResponse, error) {
+	return auth.userRepo.SelectUser(ctx, userID)
+}
