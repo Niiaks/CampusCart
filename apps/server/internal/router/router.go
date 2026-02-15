@@ -5,20 +5,21 @@ import (
 	"time"
 
 	"github.com/Niiaks/campusCart/internal/handler"
+	customMiddleware "github.com/Niiaks/campusCart/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httprate"
 )
 
-func NewRouter(h *handler.Handlers) chi.Router {
+func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router {
 
 	r := chi.NewRouter()
 
 	//Global middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(mw.Global.Recover())
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
 
 	//rate limit
 	r.Use(httprate.Limit(
@@ -31,6 +32,17 @@ func NewRouter(h *handler.Handlers) chi.Router {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/health", h.Health.CheckHealth)
+
+		// Public auth routes
+		r.Post("/auth/login", h.Auth.Login())
+		r.Post("/auth/register", h.Auth.Register())
+
+		// Protected auth routes
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.Authenticate)
+			r.Post("/auth/logout", h.Auth.Logout())
+			r.Get("/auth/me", h.Auth.GetCurrentUser())
+		})
 	})
 	return r
 }
