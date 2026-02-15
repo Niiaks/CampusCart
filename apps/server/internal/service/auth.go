@@ -98,8 +98,8 @@ func (auth *AuthService) Register(ctx context.Context, request *types.RegisterUs
 		Email:                          request.Email,
 		Password:                       string(hashed),
 		Phone:                          request.Phone,
-		EmailVerificationCode:          emailVerificationCode,
-		EmailVerificationCodeExpiresAt: expiresAt,
+		EmailVerificationCode:          &emailVerificationCode,
+		EmailVerificationCodeExpiresAt: &expiresAt,
 	}
 
 	if err := auth.userRepo.InsertUser(ctx, user); err != nil {
@@ -134,11 +134,11 @@ func (auth *AuthService) VerifyEmail(ctx context.Context, request *types.VerifyE
 		return nil, errors.New("email already verified")
 	}
 
-	if user.EmailVerificationCode != request.Code {
+	if user.EmailVerificationCode == nil || *user.EmailVerificationCode != request.Code {
 		return nil, errors.New("invalid verification code")
 	}
 
-	if time.Now().After(user.EmailVerificationCodeExpiresAt) {
+	if user.EmailVerificationCodeExpiresAt == nil || time.Now().After(*user.EmailVerificationCodeExpiresAt) {
 		return nil, errors.New("verification code has expired")
 	}
 

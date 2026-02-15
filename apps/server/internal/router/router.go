@@ -18,8 +18,8 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 	//Global middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(mw.Global.Recover())
 	r.Use(middleware.Logger)
+	r.Use(mw.Global.Recover())
 
 	//rate limit
 	r.Use(httprate.Limit(

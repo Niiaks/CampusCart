@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Niiaks/campusCart/internal/model"
 	"github.com/Niiaks/campusCart/pkg/types"
@@ -85,7 +86,7 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 }
 
 func (ur *UserRepository) VerifyUserEmail(ctx context.Context, email string) error {
-	sql := `UPDATE users SET email_verified = TRUE, email_verification_code = NULL, email_verification_expires_at = NULL WHERE email = $1`
-	_, err := ur.pool.Exec(ctx, sql, email)
+	sql := `UPDATE users SET email_verified = TRUE, email_verification_code = NULL, email_verification_expires_at = NULL, updated_at = $1 WHERE email = $2`
+	_, err := ur.pool.Exec(ctx, sql, time.Now(), email)
 	return err
 }
