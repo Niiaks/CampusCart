@@ -46,7 +46,7 @@ func (ce *ContextEnhancer) EnhanceContext(next http.Handler) http.Handler {
 			contextLogger = contextLogger.With().Str("user_id", userID).Logger()
 		}
 
-		if userRole := ce.extractUserRole(r); userRole == "" {
+		if userRole := ce.extractUserRole(r); userRole != "" {
 			contextLogger = contextLogger.With().Str("user_role", userRole).Logger()
 		}
 		//set enhanced logger in context
