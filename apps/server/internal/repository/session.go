@@ -39,7 +39,7 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, session *model.S
 	err := sr.pool.QueryRow(ctx, sql, session.UserID, expiresAt).Scan(&session.ID)
 
 	if err != nil {
-		return fmt.Errorf("Create session error %s", err)
+		return fmt.Errorf("create session error: %w", err)
 	}
 
 	return nil
@@ -57,7 +57,7 @@ func (sr *SessionRepository) GetUserBySession(ctx context.Context, sessionID str
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("Session not found %s", err)
+			return nil, fmt.Errorf("session not found: %w", err)
 		}
 		return nil, err
 	}
