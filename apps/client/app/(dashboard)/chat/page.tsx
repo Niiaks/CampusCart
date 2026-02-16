@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Paperclip, Smile, ChevronLeft, MoreVertical } from "lucide-react";
+import {
+  Send,
+  Paperclip,
+  Smile,
+  ChevronLeft,
+  MoreVertical,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -90,7 +96,10 @@ export default function ChatPage() {
         id: msgs.length + 1,
         sender: "me",
         text: input,
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       },
     ]);
     setInput("");
@@ -158,7 +167,11 @@ export default function ChatPage() {
             </p>
             <span className="text-xs text-muted-foreground">Online</span>
           </div>
-          <Button variant="ghost" size="icon-sm" className="text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground"
+          >
             <MoreVertical className="size-5" />
           </Button>
         </div>
