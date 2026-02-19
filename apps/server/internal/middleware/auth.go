@@ -15,6 +15,8 @@ const (
 
 	SessionIDKey = "session_id"
 	AuthUserKey  = "auth_user"
+	// Role constants
+	AdminRole = "admin"
 )
 
 type AuthMiddleware struct {
