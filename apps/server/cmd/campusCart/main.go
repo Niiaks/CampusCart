@@ -11,12 +11,14 @@ import (
 	"github.com/Niiaks/campusCart/internal/config"
 	"github.com/Niiaks/campusCart/internal/database"
 	"github.com/Niiaks/campusCart/internal/handler"
+	"github.com/Niiaks/campusCart/internal/lib/file"
 	"github.com/Niiaks/campusCart/internal/logger"
 	"github.com/Niiaks/campusCart/internal/middleware"
 	"github.com/Niiaks/campusCart/internal/repository"
 	"github.com/Niiaks/campusCart/internal/router"
 	"github.com/Niiaks/campusCart/internal/server"
 	"github.com/Niiaks/campusCart/internal/service"
+	"github.com/cloudinary/cloudinary-go/v2"
 )
 
 const DefaultContextTimeout = 30
@@ -44,6 +46,14 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to initialize server")
 	}
+
+	// Initialize cloudinary
+	cld, err := cloudinary.New()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to initialize cloudinary")
+	}
+
+	_ = file.NewClient(cld, &log)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(srv.DB.Pool)
