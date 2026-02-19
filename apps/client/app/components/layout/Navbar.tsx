@@ -58,8 +58,11 @@ const Navbar = () => {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <Button className="hidden bg-white text-brand hover:bg-white/90 md:inline-flex">
-            Sell on campusCart
+          <Button
+            asChild
+            className="hidden bg-white text-brand hover:bg-white/90 md:inline-flex"
+          >
+            <Link href="/brand">Sell on campusCart</Link>
           </Button>
           <Button
             variant="ghost"
@@ -93,9 +96,13 @@ const Navbar = () => {
                 <>
                   <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>My Brand</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/brand">My Brand</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>Feedback</DropdownMenuItem>
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">Profile</Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => logout()}>
                     <LogOut className="size-4" />

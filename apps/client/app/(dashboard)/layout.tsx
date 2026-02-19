@@ -2,16 +2,14 @@ import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
 import Link from "next/link";
 
-const RootLayout = ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Navbar />
       <div className="pt-24">{children}</div>
-      <Footer />
       <Link href={"/chat"}>
         <Button
           size="icon"
@@ -25,4 +23,4 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default RootLayout;
+export default DashboardLayout;
