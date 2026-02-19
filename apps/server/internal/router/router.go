@@ -62,6 +62,11 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 			r.Post("/auth/logout", h.Auth.Logout())
 			r.Get("/auth/me", h.Auth.GetCurrentUser())
 		})
+
+		// Admin routes
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Authorization.Authorize)
+		})
 	})
 	return r
 }

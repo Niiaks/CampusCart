@@ -11,6 +11,7 @@ type Middlewares struct {
 	ContextEnhancer *ContextEnhancer
 	Tracing         *TracingMiddleware
 	Auth            *AuthMiddleware
+	Authorization   *AuthorizationMiddleware
 }
 
 func NewMiddlewares(s *server.Server, sessionRepo repository.SessionRepo) *Middlewares {
@@ -28,5 +29,6 @@ func NewMiddlewares(s *server.Server, sessionRepo repository.SessionRepo) *Middl
 		ContextEnhancer: NewContextEnhancer(s),
 		Tracing:         NewTracing(nrApp),
 		Auth:            NewAuthMiddleware(sessionRepo, isProd),
+		Authorization:   NewAuthorizationMiddleware(),
 	}
 }
