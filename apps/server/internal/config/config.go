@@ -18,7 +18,14 @@ type Config struct {
 	Redis         RedisConfig          `koanf:"redis" validate:"required"`
 	Integration   IntegrationConfig    `koanf:"integration" validate:"required"`
 	Auth          AuthConfig           `koanf:"auth_config" validate:"required"`
+	Cloudinary    CloudinaryConfig     `koanf:"cloudinary" validate:"required"`
 	Observability *ObservabilityConfig `koanf:"observability"`
+}
+
+type CloudinaryConfig struct {
+	CloudName string `koanf:"cloud_name" validate:"required"`
+	ApiKey    string `koanf:"api_key" validate:"required"`
+	ApiSecret string `koanf:"api_secret" validate:"required"`
 }
 
 type PrimaryConfig struct {
