@@ -63,9 +63,14 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 			r.Get("/auth/me", h.Auth.GetCurrentUser())
 		})
 
+		// Public category routes
+		r.Get("/categories", h.Category.GetAll())
+
 		// Admin routes
 		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.Authenticate)
 			r.Use(mw.Authorization.Authorize)
+			r.Post("/categories", h.Category.Create())
 		})
 	})
 	return r
