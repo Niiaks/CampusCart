@@ -11,30 +11,39 @@ import (
 
 type Client struct {
 	cld    *cloudinary.Cloudinary
+	env    string
 	logger *zerolog.Logger
 }
 
-func NewClient(cld *cloudinary.Cloudinary, logger *zerolog.Logger) *Client {
+func NewClient(cld *cloudinary.Cloudinary, logger *zerolog.Logger, env string) *Client {
 	return &Client{
 		cld:    cld,
 		logger: logger,
+		env:    env,
 	}
 }
 
-func (c *Client) UploadImage(ctx context.Context, file interface{}) (string, string, error) {
-	c.logger.Info().Msg("image upload started...")
+func (c *Client) UploadImage(ctx context.Context, file interface{}, folder string) (string, string, error) {
+	uploadFolder := c.env + "/" + folder
+	c.logger.Info().Str("folder", uploadFolder).Msg("image upload started...")
 	resp, err := c.cld.Upload.Upload(ctx, file, uploader.UploadParams{
-		ResourceType:    "image",
-		UseFilename:     api.Bool(true),
-		UniqueFilename:  api.Bool(true),
-		Moderation:      "webpurify",
-		QualityAnalysis: api.Bool(true),
-		Overwrite:       api.Bool(false),
+		ResourceType:   "image",
+		UseFilename:    api.Bool(true),
+		UniqueFilename: api.Bool(true),
+		Overwrite:      api.Bool(false),
+		Folder:         uploadFolder,
 	})
+
 	if err != nil {
 		c.logger.Err(err).Msg("an error occurred uploading the image")
 		return "", "", err
 	}
+
+	c.logger.Info().
+		Str("secure_url", resp.SecureURL).
+		Str("public_id", resp.PublicID).
+		Msg("cloudinary response")
+
 	return resp.SecureURL, resp.PublicID, nil
 }
 
