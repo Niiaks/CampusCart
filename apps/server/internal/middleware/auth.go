@@ -55,9 +55,6 @@ func (am *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, SessionIDKey, sessionID)
 		ctx = context.WithValue(ctx, AuthUserKey, user)
-		ctx = context.WithValue(ctx, UserIDKey, user.ID)
-		ctx = context.WithValue(ctx, UserRoleKey, user.Role)
-
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
