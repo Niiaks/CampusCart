@@ -48,21 +48,23 @@ func main() {
 	}
 
 	// Initialize cloudinary
-	cld, err := cloudinary.New()
+	cld, err := cloudinary.NewFromParams(cfg.Cloudinary.CloudName, cfg.Cloudinary.ApiKey, cfg.Cloudinary.ApiSecret)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to initialize cloudinary")
 	}
 
-	_ = file.NewClient(cld, &log)
+	fileClient := file.NewClient(cld, &log, cfg.Primary.Env)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(srv.DB.Pool)
 	sessionRepo := repository.NewSessionRepository(srv.DB.Pool)
+	categoryRepo := repository.NewCategoryRepository(srv.DB.Pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, sessionRepo, srv.Job)
+	categoryService := service.NewCategoryService(categoryRepo, fileClient)
 
-	h := handler.NewHandlers(srv, authService)
+	h := handler.NewHandlers(srv, authService, categoryService)
 	mw := middleware.NewMiddlewares(srv, sessionRepo)
 	r := router.NewRouter(h, mw)
 
@@ -76,7 +78,7 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// Wait for interrupt signal to gracefully shut down the server
 	<-ctx.Done()
 	stop()
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout*time.Second)
