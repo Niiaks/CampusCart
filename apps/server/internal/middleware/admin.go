@@ -13,8 +13,6 @@ func NewAuthorizationMiddleware() *AuthorizationMiddleware {
 }
 
 // Authorize ensures the request is from an authenticated admin user.
-// Requires `AuthMiddleware` to run earlier in the chain so that
-// `GetAuthUser` and user role context values are available.
 func (am *AuthorizationMiddleware) Authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := GetAuthUser(r.Context())
