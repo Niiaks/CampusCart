@@ -78,10 +78,14 @@ func (ch *CategoryHandler) Create() http.HandlerFunc {
 		}
 
 		return &types.CategoryResponse{
-			ID:       category.ID,
-			Name:     category.Name,
-			ImageUrl: category.ImageUrl,
-			PublicID: category.PublicID,
+			ID:        category.ID,
+			ParentID:  category.ParentID,
+			Name:      category.Name,
+			Slug:      category.Slug,
+			Icon:      category.Icon,
+			PublicID:  category.PublicID,
+			IsActive:  category.IsActive,
+			SortOrder: category.SortOrder,
 		}, nil
 	}, http.StatusCreated, func() *types.EmptyRequest { return &types.EmptyRequest{} })
 }
@@ -96,10 +100,14 @@ func (ch *CategoryHandler) GetAll() http.HandlerFunc {
 		resp := make([]types.CategoryResponse, len(categories))
 		for i, c := range categories {
 			resp[i] = types.CategoryResponse{
-				ID:       c.ID,
-				Name:     c.Name,
-				ImageUrl: c.ImageUrl,
-				PublicID: c.PublicID,
+				ID:        c.ID,
+				ParentID:  c.ParentID,
+				Name:      c.Name,
+				Slug:      c.Slug,
+				Icon:      c.Icon,
+				PublicID:  c.PublicID,
+				IsActive:  c.IsActive,
+				SortOrder: c.SortOrder,
 			}
 		}
 
