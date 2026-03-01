@@ -24,7 +24,7 @@ func NewClient(cld *cloudinary.Cloudinary, logger *zerolog.Logger, env string) *
 }
 
 func (c *Client) UploadImage(ctx context.Context, file interface{}, folder string) (string, string, error) {
-	uploadFolder := c.env + "/" + folder
+	uploadFolder := "cc" + c.env + "/" + folder
 	c.logger.Info().Str("folder", uploadFolder).Msg("image upload started...")
 	resp, err := c.cld.Upload.Upload(ctx, file, uploader.UploadParams{
 		ResourceType:   "image",
@@ -74,3 +74,5 @@ func (c *Client) DeleteFile(ctx context.Context, publicID string, resourceType s
 	}
 	return nil
 }
+
+func (c *Client) GenerateSignedUrl(ctx context.Context)
