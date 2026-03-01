@@ -11,12 +11,12 @@ type Session struct {
 
 	// RefreshToken holds the hashed refresh token and is not marshaled to JSON; it
 	// must be stored and compared securely
-	RefreshToken string `json:"-"` // hashed refresh token value
+	RefreshToken string `json:"refresh_token" validate:"required"` // hashed refresh token value
 
 	// UserAgent and IPAddress capture client context (browser/device and source IP)
 	// that can be used for logging, auditing or additional verification.
-	UserAgent string `json:"user_agent,omitempty"` // client user agent string
-	IPAddress string `json:"ip_address,omitempty"` // client IP at issuance
+	UserAgent string `json:"user_agent" validate:"required"` // client user agent string
+	IPAddress string `json:"ip_address" validate:"required"` // client IP at issuance
 
 	// ExpiresAt denotes when the session becomes invalid and should be revoked/cleaned up.
 	ExpiresAt time.Time `json:"expires_at"` // absolute expiry of session
