@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	sec "crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math/rand/v2"
 	"strings"
@@ -9,6 +11,7 @@ import (
 
 	errs "github.com/Niiaks/campusCart/internal/err"
 	"github.com/Niiaks/campusCart/internal/lib/job"
+	"github.com/Niiaks/campusCart/internal/lib/tokenhash"
 	"github.com/Niiaks/campusCart/internal/model"
 	"github.com/Niiaks/campusCart/internal/repository"
 	"github.com/Niiaks/campusCart/pkg/types"
@@ -32,7 +35,7 @@ func NewAuthService(userRepo repository.UserRepo, sessionRepo repository.Session
 	}
 }
 
-func (auth *AuthService) Login(ctx context.Context, request *types.LoginUser) (*types.LoginResponse, error) {
+func (auth *AuthService) Login(ctx context.Context, userAgent, ipAddress string, request *types.LoginUser) (*types.LoginResponse, error) {
 	user, err := auth.userRepo.GetUserByEmail(ctx, request.Email)
 	if err != nil {
 		return nil, err
@@ -51,8 +54,17 @@ func (auth *AuthService) Login(ctx context.Context, request *types.LoginUser) (*
 		return nil, errs.NewUnauthorizedError("email not verified, verify to continue", false)
 	}
 
+	// hash sessionToken
+	sessionToken, err := generateSessionToken()
+	if err != nil {
+		return nil, errs.NewInternalServerError()
+	}
+	hashedToken := tokenhash.Hash(sessionToken)
 	session := &model.Session{
-		UserID: user.ID,
+		UserID:       user.ID,
+		RefreshToken: hashedToken,
+		UserAgent:    userAgent,
+		IPAddress:    ipAddress,
 	}
 
 	err = auth.sessionRepo.CreateSession(ctx, session)
@@ -67,8 +79,8 @@ func (auth *AuthService) Login(ctx context.Context, request *types.LoginUser) (*
 	}
 
 	return &types.LoginResponse{
-		SessionID: session.ID,
-		User:      userResponse,
+		RefreshToken: sessionToken,
+		User:         userResponse,
 	}, nil
 }
 
@@ -121,7 +133,7 @@ func (auth *AuthService) Register(ctx context.Context, request *types.RegisterUs
 	}, nil
 }
 
-func (auth *AuthService) VerifyEmail(ctx context.Context, request *types.VerifyEmailRequest) (*types.LoginResponse, error) {
+func (auth *AuthService) VerifyEmail(ctx context.Context, userAgent, ipAddress string, request *types.VerifyEmailRequest) (*types.LoginResponse, error) {
 	user, err := auth.userRepo.GetUserByEmail(ctx, request.Email)
 	if err != nil {
 		return nil, err
@@ -147,10 +159,22 @@ func (auth *AuthService) VerifyEmail(ctx context.Context, request *types.VerifyE
 		return nil, fmt.Errorf("failed to verify email: %w", err)
 	}
 
+	// hash sessionToken
+	sessionToken, err := generateSessionToken()
+	if err != nil {
+		return nil, errs.NewInternalServerError()
+	}
+
+	hashedToken := tokenhash.Hash(sessionToken)
+
 	// Create session now that email is verified
 	session := &model.Session{
-		UserID: user.ID,
+		UserID:       user.ID,
+		RefreshToken: hashedToken,
+		UserAgent:    userAgent,
+		IPAddress:    ipAddress,
 	}
+
 	if err := auth.sessionRepo.CreateSession(ctx, session); err != nil {
 		return nil, err
 	}
@@ -167,8 +191,8 @@ func (auth *AuthService) VerifyEmail(ctx context.Context, request *types.VerifyE
 	}
 
 	return &types.LoginResponse{
-		SessionID: session.ID,
-		User:      userResponse,
+		RefreshToken: sessionToken,
+		User:         userResponse,
 	}, nil
 }
 
@@ -193,4 +217,15 @@ func isValidEmail(email string) bool {
 		return false
 	}
 	return parts[1] == "st.ug.edu.gh"
+}
+
+func generateSessionToken() (string, error) {
+	buf := make([]byte, 32)
+
+	_, err := sec.Read(buf)
+	if err != nil {
+		return "", fmt.Errorf("unable generating bytes %w: ", err)
+	}
+
+	return base64.RawURLEncoding.EncodeToString(buf), nil
 }
