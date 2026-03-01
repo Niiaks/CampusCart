@@ -30,9 +30,9 @@ func NewCategoryRepository(pool *pgxpool.Pool) *CategoryRepository {
 }
 
 func (cr *CategoryRepository) CreateCategory(ctx context.Context, category *model.Category) error {
-	sql := `INSERT INTO categories(name,image_url,public_id) VALUES($1,$2,$3) RETURNING id`
+	sql := `INSERT INTO categories(parent_id, name, slug, icon, public_id, is_active, sort_order) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id`
 
-	err := cr.pool.QueryRow(ctx, sql, category.Name, category.ImageUrl, category.PublicID).Scan(&category.ID)
+	err := cr.pool.QueryRow(ctx, sql, category.ParentID, category.Name, category.Slug, category.Icon, category.PublicID, category.IsActive, category.SortOrder).Scan(&category.ID)
 	if err != nil {
 		return fmt.Errorf("error creating category: %w", err)
 	}
@@ -40,7 +40,7 @@ func (cr *CategoryRepository) CreateCategory(ctx context.Context, category *mode
 }
 
 func (cr *CategoryRepository) GetCategories(ctx context.Context) ([]model.Category, error) {
-	sql := `SELECT id,name,image_url,public_id FROM categories ORDER BY name`
+	sql := `SELECT id, parent_id, name, slug, icon, public_id, is_active, sort_order FROM categories WHERE deleted_at IS NULL ORDER BY sort_order, name`
 
 	rows, err := cr.pool.Query(ctx, sql)
 	if err != nil {
@@ -54,9 +54,13 @@ func (cr *CategoryRepository) GetCategories(ctx context.Context) ([]model.Catego
 		var category model.Category
 		if err := rows.Scan(
 			&category.ID,
+			&category.ParentID,
 			&category.Name,
-			&category.ImageUrl,
+			&category.Slug,
+			&category.Icon,
 			&category.PublicID,
+			&category.IsActive,
+			&category.SortOrder,
 		); err != nil {
 			return nil, err
 		}
@@ -66,15 +70,19 @@ func (cr *CategoryRepository) GetCategories(ctx context.Context) ([]model.Catego
 }
 
 func (cr *CategoryRepository) GetCategory(ctx context.Context, categoryID string) (*model.Category, error) {
-	sql := `SELECT id,name,image_url,public_id FROM categories WHERE id =$1 ORDER BY name`
+	sql := `SELECT id, parent_id, name, slug, icon, public_id, is_active, sort_order FROM categories WHERE id =$1 AND deleted_at IS NULL`
 
 	var category model.Category
 
 	err := cr.pool.QueryRow(ctx, sql, categoryID).Scan(
 		&category.ID,
+		&category.ParentID,
 		&category.Name,
-		&category.ImageUrl,
+		&category.Slug,
+		&category.Icon,
 		&category.PublicID,
+		&category.IsActive,
+		&category.SortOrder,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -86,9 +94,19 @@ func (cr *CategoryRepository) GetCategory(ctx context.Context, categoryID string
 }
 
 func (cr *CategoryRepository) UpdateCategory(ctx context.Context, categoryID string, updateCategory *types.UpdateCategory) error {
-	sql := `UPDATE categories SET name = COALESCE($1,name), image_url = COALESCE($2,image_url), updated_at = $3 WHERE id = $4`
+	sql := `UPDATE categories
+SET
+	name = COALESCE($1, name),
+	slug = COALESCE($2, slug),
+	icon = COALESCE($3, icon),
+	public_id = COALESCE($4, public_id),
+	parent_id = COALESCE($5, parent_id),
+	is_active = COALESCE($6, is_active),
+	sort_order = COALESCE($7, sort_order),
+	updated_at = $8
+WHERE id = $9 AND deleted_at IS NULL`
 
-	_, err := cr.pool.Exec(ctx, sql, updateCategory.Name, updateCategory.ImageUrl, time.Now(), categoryID)
+	_, err := cr.pool.Exec(ctx, sql, updateCategory.Name, updateCategory.Slug, updateCategory.Icon, updateCategory.PublicID, updateCategory.ParentID, updateCategory.IsActive, updateCategory.SortOrder, time.Now(), categoryID)
 
 	if err != nil {
 		return fmt.Errorf("error updating category: %w", err)
