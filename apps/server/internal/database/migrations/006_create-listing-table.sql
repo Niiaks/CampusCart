@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS listings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    brand_id UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
     category_id UUID NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS listings (
 ALTER TABLE listings
     ADD CONSTRAINT listings_image_urls_not_empty CHECK (array_length(image_urls, 1) IS NOT NULL AND array_length(image_urls, 1) > 0);
 
-CREATE INDEX idx_listings_seller_id ON listings (seller_id);
+CREATE INDEX idx_listings_brand_id ON listings (brand_id);
 CREATE INDEX idx_listings_category_id ON listings (category_id);
 CREATE INDEX idx_listings_condition ON listings (condition);
 CREATE INDEX idx_listings_price ON listings (price);
