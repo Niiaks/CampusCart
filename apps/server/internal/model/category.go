@@ -34,6 +34,7 @@ type Category struct {
 	Name      string  `json:"name"`                // display label
 	Slug      string  `json:"slug"`                // url-safe identifier
 	Icon      string  `json:"icon,omitempty"`      // optional icon name/url
+	PublicID  string  `json:"public_id"`           // id for cloudinary deletion
 	IsActive  bool    `json:"is_active"`           // controls visibility
 	SortOrder int     `json:"sort_order"`          // ordering among siblings
 	Model
