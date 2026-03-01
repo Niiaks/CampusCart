@@ -21,6 +21,7 @@ type CategoryRepo interface {
 	GetCategories(ctx context.Context) ([]model.Category, error)
 	GetCategory(ctx context.Context, categoryID string) (*model.Category, error)
 	UpdateCategory(ctx context.Context, categoryID string, updateCategory *types.UpdateCategory) error
+	DeleteCategory(ctx context.Context, categoryID string) error
 }
 
 func NewCategoryRepository(pool *pgxpool.Pool) *CategoryRepository {
@@ -106,10 +107,26 @@ SET
 	updated_at = $8
 WHERE id = $9 AND deleted_at IS NULL`
 
-	_, err := cr.pool.Exec(ctx, sql, updateCategory.Name, updateCategory.Slug, updateCategory.Icon, updateCategory.PublicID, updateCategory.ParentID, updateCategory.IsActive, updateCategory.SortOrder, time.Now(), categoryID)
+	cmdTag, err := cr.pool.Exec(ctx, sql, updateCategory.Name, updateCategory.Slug, updateCategory.Icon, updateCategory.PublicID, updateCategory.ParentID, updateCategory.IsActive, updateCategory.SortOrder, time.Now(), categoryID)
 
 	if err != nil {
 		return fmt.Errorf("error updating category: %w", err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("category not found or no rows updated")
+	}
+	return nil
+}
+
+func (cr *CategoryRepository) DeleteCategory(ctx context.Context, categoryID string) error {
+	sql := `UPDATE categories SET deleted_at = $1 WHERE id = $2 AND deleted_at IS NULL`
+	cmdTag, err := cr.pool.Exec(ctx, sql, time.Now(), categoryID)
+	if err != nil {
+		return fmt.Errorf("error deleting category: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("category not found or already deleted")
 	}
 	return nil
 }
