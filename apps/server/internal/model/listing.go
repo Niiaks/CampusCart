@@ -6,7 +6,7 @@ import "time"
 
 type Listing struct {
 	ID          string                 `json:"id"`                                                       // unique listing id
-	SellerID    string                 `json:"seller_id"`                                                // owner user id
+	BrandID     string                 `json:"brand_id"`                                                 // owner brand id
 	CategoryID  string                 `json:"category_id" validate:"required"`                          // category placement
 	Title       string                 `json:"title" validate:"required,min=5,max=255"`                  // headline shown to buyers
 	Description string                 `json:"description" validate:"required"`                          // full description
@@ -24,5 +24,5 @@ type Listing struct {
 
 	// Populated on demand (joins)
 	Category *Category `json:"category,omitempty"` // populated via joins
-	Seller   *User     `json:"seller,omitempty"`   // populated via joins
+	Brand    *Brand    `json:"brand,omitempty"`    // populated via joins
 }
