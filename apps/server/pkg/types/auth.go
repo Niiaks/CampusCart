@@ -42,8 +42,8 @@ type RegisterResponse struct {
 }
 
 type LoginResponse struct {
-	SessionID string        `json:"-"`
-	User      *UserResponse `json:"user"`
+	RefreshToken string        `json:"-"`
+	User         *UserResponse `json:"user"`
 }
 
 type UserResponse struct {
