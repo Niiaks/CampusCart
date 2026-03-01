@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(150) NOT NULL,
     slug VARCHAR(160) NOT NULL UNIQUE,
     icon TEXT,
+    public_id TEXT,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     sort_order INT NOT NULL DEFAULT 0,
     deleted_at TIMESTAMPTZ,
