@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	errs "github.com/Niiaks/campusCart/internal/err"
 	"github.com/Niiaks/campusCart/internal/model"
 	"github.com/Niiaks/campusCart/internal/server"
@@ -113,4 +115,105 @@ func (ch *CategoryHandler) GetAll() http.HandlerFunc {
 
 		return resp, nil
 	}, http.StatusOK, func() *types.EmptyRequest { return &types.EmptyRequest{} })
+}
+
+func (ch *CategoryHandler) GetByID() http.HandlerFunc {
+	return Handle(ch.Handler, func(w http.ResponseWriter, r *http.Request, req *types.EmptyRequest) (*types.CategoryResponse, error) {
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			return nil, errs.NewBadRequestError("category ID is required", false, nil, nil, nil)
+		}
+
+		category, err := ch.categoryService.GetCategoryByID(r.Context(), id)
+		if err != nil {
+			return nil, err
+		}
+
+		return &types.CategoryResponse{
+			ID:        category.ID,
+			ParentID:  category.ParentID,
+			Name:      category.Name,
+			Slug:      category.Slug,
+			Icon:      category.Icon,
+			PublicID:  category.PublicID,
+			IsActive:  category.IsActive,
+			SortOrder: category.SortOrder,
+		}, nil
+	}, http.StatusOK, func() *types.EmptyRequest { return &types.EmptyRequest{} })
+}
+
+func (ch *CategoryHandler) Update() http.HandlerFunc {
+	return Handle(ch.Handler, func(w http.ResponseWriter, r *http.Request, req *types.EmptyRequest) (*types.CategoryResponse, error) {
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			return nil, errs.NewBadRequestError("category ID is required", false, nil, nil, nil)
+		}
+
+		if err := r.ParseMultipartForm(maxUploadSize); err != nil && err != http.ErrNotMultipart {
+			return nil, errs.NewBadRequestError(fmt.Sprintf("file too large or invalid form: %v", err), false, nil, nil, nil)
+		}
+
+		update := &types.UpdateCategory{}
+
+		name := strings.TrimSpace(r.FormValue("name"))
+		if name != "" {
+			update.Name = &name
+		}
+
+		parentID := strings.TrimSpace(r.FormValue("parent_id"))
+		if parentID != "" {
+			update.ParentID = &parentID
+		}
+
+		var reader *bytes.Reader
+		file, _, err := r.FormFile("image")
+		if err == nil {
+			defer file.Close()
+			fileBytes, err := io.ReadAll(file)
+			if err != nil {
+				return nil, errs.NewBadRequestError("could not read file", false, nil, nil, nil)
+			}
+			contentType := http.DetectContentType(fileBytes)
+			if !strings.HasPrefix(contentType, "image/") {
+				return nil, errs.NewBadRequestError("invalid file type", true, nil, nil, nil)
+			}
+			reader = bytes.NewReader(fileBytes)
+		}
+
+		var fileInterface interface{} = nil
+		if reader != nil {
+			fileInterface = reader
+		}
+
+		category, err := ch.categoryService.UpdateCategory(r.Context(), id, update, fileInterface)
+		if err != nil {
+			return nil, err
+		}
+
+		return &types.CategoryResponse{
+			ID:        category.ID,
+			ParentID:  category.ParentID,
+			Name:      category.Name,
+			Slug:      category.Slug,
+			Icon:      category.Icon,
+			PublicID:  category.PublicID,
+			IsActive:  category.IsActive,
+			SortOrder: category.SortOrder,
+		}, nil
+	}, http.StatusOK, func() *types.EmptyRequest { return &types.EmptyRequest{} })
+}
+
+func (ch *CategoryHandler) Delete() http.HandlerFunc {
+	return HandleNoContent(ch.Handler, func(w http.ResponseWriter, r *http.Request, req *types.EmptyRequest) error {
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			return errs.NewBadRequestError("category ID is required", false, nil, nil, nil)
+		}
+
+		err := ch.categoryService.DeleteCategory(r.Context(), id)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, http.StatusNoContent, func() *types.EmptyRequest { return &types.EmptyRequest{} })
 }
