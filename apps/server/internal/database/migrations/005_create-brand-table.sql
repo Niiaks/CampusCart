@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS brands (
     seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     slug VARCHAR(160) NOT NULL UNIQUE,
-    description TEXT NOT NULL,
+    description TEXT,
     profile_url TEXT,
     banner_url TEXT,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
