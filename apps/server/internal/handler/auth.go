@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"net"
 	"net/http"
+	"strings"
 
 	errs "github.com/Niiaks/campusCart/internal/err"
 	"github.com/Niiaks/campusCart/internal/middleware"
@@ -11,7 +13,7 @@ import (
 )
 
 const (
-	sessionCookieName = "session_id"
+	sessionCookieName = "cc_refresh_token"
 	sessionMaxAge     = 7 * 24 * 60 * 60 // 7 days in seconds
 )
 
@@ -43,12 +45,12 @@ func (h *AuthHandler) setSessionCookie(w http.ResponseWriter, sessionID string) 
 
 func (h *AuthHandler) Login() http.HandlerFunc {
 	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.LoginUser) (*types.LoginResponse, error) {
-		resp, err := h.authService.Login(r.Context(), req)
+		resp, err := h.authService.Login(r.Context(), r.UserAgent(), clientIP(r), req)
 		if err != nil {
 			return nil, err
 		}
 
-		h.setSessionCookie(w, resp.SessionID)
+		h.setSessionCookie(w, resp.RefreshToken)
 		return resp, nil
 	}, http.StatusOK, func() *types.LoginUser { return &types.LoginUser{} })
 }
@@ -66,14 +68,32 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 
 func (h *AuthHandler) VerifyEmail() http.HandlerFunc {
 	return Handle(h.Handler, func(w http.ResponseWriter, r *http.Request, req *types.VerifyEmailRequest) (*types.LoginResponse, error) {
-		resp, err := h.authService.VerifyEmail(r.Context(), req)
+		resp, err := h.authService.VerifyEmail(r.Context(), r.UserAgent(), clientIP(r), req)
 		if err != nil {
 			return nil, err
 		}
 
-		h.setSessionCookie(w, resp.SessionID)
+		h.setSessionCookie(w, resp.RefreshToken)
 		return resp, nil
 	}, http.StatusOK, func() *types.VerifyEmailRequest { return &types.VerifyEmailRequest{} })
+}
+
+// clientIP extracts a best-effort client IP from the request.
+func clientIP(r *http.Request) string {
+	// Trust X-Forwarded-For if present (first entry) and appears reasonable.
+	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
+		parts := strings.Split(fwd, ",")
+		candidate := strings.TrimSpace(parts[0])
+		if candidate != "" {
+			return candidate
+		}
+	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil && host != "" {
+		return host
+	}
+	return r.RemoteAddr
 }
 
 // Logout requires the Authenticate middleware (session ID comes from context).
