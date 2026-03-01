@@ -12,7 +12,12 @@ CREATE INDEX idx_saved_listing_id ON saved (listing_id);
 CREATE UNIQUE INDEX idx_saved_user_listing_unique
     ON saved (user_id, listing_id)
     WHERE deleted_at IS NULL;
+CREATE TRIGGER trg_saved_set_updated_at
+    BEFORE UPDATE ON saved
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
 
 ---- create above / drop below ----
 
+DROP TRIGGER IF EXISTS trg_saved_set_updated_at ON saved;
 DROP TABLE IF EXISTS saved;

@@ -6,7 +6,16 @@ CREATE EXTENSION IF NOT EXISTS "citext";
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE listing_condition AS ENUM ('new', 'used', 'second-hand');
 CREATE TYPE media_type AS ENUM ('photo', 'video');
-CREATE TYPE feedback_type AS ENUM ('suggestion', 'bug');
+CREATE TYPE feedback_type AS ENUM ('suggestion', 'bug', 'other');
+
+-- Generic trigger to bump updated_at on row changes
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+	NEW.updated_at = NOW();
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 ---- create above / drop below ----
 

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_verification_expires_at TIMESTAMPTZ,
     phone_verification_expires_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_banned BOOLEAN NOT NULL DEFAULT FALSE,
     last_active TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -22,7 +23,12 @@ CREATE INDEX idx_users_email ON users (email);
 CREATE INDEX idx_users_username ON users (username);
 CREATE INDEX idx_users_role ON users (role);
 CREATE INDEX idx_users_is_active ON users (is_active);
+CREATE TRIGGER trg_users_set_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
 
 ---- create above / drop below ----
 
+DROP TRIGGER IF EXISTS trg_users_set_updated_at ON users;
 DROP TABLE IF EXISTS users;
