@@ -5,15 +5,16 @@ import (
 	"net/http"
 
 	errs "github.com/Niiaks/campusCart/internal/err"
+	"github.com/Niiaks/campusCart/internal/lib/tokenhash"
 	"github.com/Niiaks/campusCart/internal/model"
 	"github.com/Niiaks/campusCart/internal/repository"
 )
 
 const (
-	sessionCookieName = "session_id"
+	sessionCookieName = "cc_refresh_token"
 	sessionMaxAge     = 7 * 24 * 60 * 60 // 7 days in seconds
 
-	SessionIDKey = "session_id"
+	SessionIDKey = "cc_refresh_token"
 	AuthUserKey  = "auth_user"
 	// Role constants
 	AdminRole = "admin"
@@ -40,20 +41,21 @@ func (am *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 			panic(errs.NewUnauthorizedError("not authenticated", false))
 		}
 
-		sessionID := cookie.Value
+		sessionToken := cookie.Value
+		hashedToken := tokenhash.Hash(sessionToken)
 
-		user, err := am.sessionRepo.GetUserBySession(r.Context(), sessionID)
+		user, err := am.sessionRepo.GetUserBySession(r.Context(), hashedToken)
 		if err != nil {
 			panic(errs.NewUnauthorizedError("invalid or expired session", false))
 		}
 
 		// Sliding expiration: refresh session + cookie
-		_ = am.sessionRepo.RefreshSession(r.Context(), sessionID)
-		am.setSessionCookie(w, sessionID)
+		_ = am.sessionRepo.RefreshSession(r.Context(), hashedToken)
+		am.setSessionCookie(w, sessionToken)
 
 		// Store session ID and user in context
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, SessionIDKey, sessionID)
+		ctx = context.WithValue(ctx, SessionIDKey, hashedToken)
 		ctx = context.WithValue(ctx, AuthUserKey, user)
 		ctx = context.WithValue(ctx, UserIDKey, user.ID)
 		ctx = context.WithValue(ctx, UserRoleKey, user.Role)
