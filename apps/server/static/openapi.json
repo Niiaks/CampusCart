@@ -22,6 +22,10 @@
     {
       "name": "Auth",
       "description": "Authentication & session management"
+    },
+    {
+      "name": "Category",
+      "description": "Category management"
     }
   ],
   "paths": {
@@ -314,6 +318,324 @@
           }
         }
       }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Category"],
+        "summary": "Get all categories",
+        "description": "Returns a list of all active categories. Public route.",
+        "operationId": "getCategories",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Category"],
+        "summary": "Create a new category",
+        "description": "Creates a new category. Requires admin role and authenticated session. Uses multipart/form-data for file upload.",
+        "operationId": "createCategory",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request / Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "/categories/{id}": {
+    "get": {
+      "tags": ["Category"],
+      "summary": "Get category by ID",
+      "description": "Returns a single category by its ID. Public route.",
+      "operationId": "getCategoryById",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Category details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryResponse"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Category not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "patch": {
+      "tags": ["Category"],
+      "summary": "Update a category",
+      "description": "Partially updates a category. Requires admin role and authenticated session. Supports optional image upload via multipart/form-data.",
+      "operationId": "updateCategory",
+      "security": [
+        {
+          "sessionCookie": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": false,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateCategoryRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Category updated successfully",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryResponse"
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad request / Validation error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Not authenticated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Forbidden - Admin required",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Category not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "tags": ["Category"],
+      "summary": "Delete a category",
+      "description": "Soft deletes a category by ID. Requires admin role and authenticated session.",
+      "operationId": "deleteCategory",
+      "security": [
+        {
+          "sessionCookie": []
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "responses": {
+        "204": {
+          "description": "Category deleted"
+        },
+        "401": {
+          "description": "Not authenticated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "403": {
+          "description": "Forbidden - Admin required",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Category not found",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        },
+        "500": {
+          "description": "Internal server error",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorResponse"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -587,6 +909,101 @@
           }
         },
         "required": ["error"]
+      },
+      "UpdateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Electronics",
+            "description": "Category display name"
+          },
+          "parent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional parent category"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Optional image file (jpeg/png)"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Visibility toggle"
+          },
+          "sort_order": {
+            "type": "integer",
+            "description": "Order among siblings"
+          }
+        }
+      },
+      "CreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Textbooks",
+            "description": "The name of the category"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Category icon image file (max 2MB, jpeg/png)."
+          }
+        },
+        "required": ["name", "image"]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "parent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": null,
+            "description": "UUID of the parent category, null if this is a top-level category."
+          },
+          "name": {
+            "type": "string",
+            "example": "Textbooks"
+          },
+          "slug": {
+            "type": "string",
+            "example": "textbooks"
+          },
+          "icon": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/demo/image/upload/v1592504992/sample.jpg"
+          },
+          "public_id": {
+            "type": "string",
+            "example": "category_icons/textbooks_abc123"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "sort_order": {
+            "type": "integer",
+            "example": 0
+          }
+        },
+        "required": [
+          "category_id",
+          "name",
+          "slug",
+          "icon",
+          "public_id",
+          "is_active",
+          "sort_order"
+        ]
       }
     }
   }
