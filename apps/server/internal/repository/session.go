@@ -35,7 +35,7 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, session *model.S
 
 	expiresAt := time.Now().Add(sessionDuration)
 
-	sql := `INSERT INTO sessions (user_id,ip_address,user_agent,refresh_token,expires_at) VALUES($1,$2,$3,$4,$5) returning id`
+	sql := `INSERT INTO sessions (user_id, ip_address, user_agent, refresh_token, expires_at) VALUES($1,$2,$3,$4,$5) returning id`
 
 	err := sr.pool.QueryRow(ctx, sql, session.UserID, session.IPAddress, session.UserAgent, session.RefreshToken, expiresAt).Scan(&session.ID)
 
@@ -49,7 +49,7 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, session *model.S
 // GetUserBySession fetches the user for a valid, non-expired refresh token.
 func (sr *SessionRepository) GetUserBySession(ctx context.Context, token string) (*model.User, error) {
 
-	sql := `SELECT u.id, u.email, u.role FROM sessions s INNER JOIN users u on s.user_id = u.id WHERE s.refresh_token = $1 AND expires_at > $2`
+	sql := `SELECT u.id, u.email, u.role FROM sessions s INNER JOIN users u on s.user_id = u.id WHERE s.refresh_token = $1 AND s.expires_at > $2 AND s.deleted_at IS NULL`
 
 	var user model.User
 
@@ -68,9 +68,9 @@ func (sr *SessionRepository) GetUserBySession(ctx context.Context, token string)
 
 // DeleteSession removes a session by its id; returns an error if no row was deleted.
 func (sr *SessionRepository) DeleteSession(ctx context.Context, sessionID string) error {
-	sql := `DELETE FROM sessions WHERE id = $1`
+	sql := `UPDATE sessions SET deleted_at = $1 WHERE refresh_token = $2`
 
-	result, err := sr.pool.Exec(ctx, sql, sessionID)
+	result, err := sr.pool.Exec(ctx, sql, time.Now(), sessionID)
 	if err != nil {
 		return fmt.Errorf("delete session error: %w", err)
 	}
@@ -87,7 +87,7 @@ func (sr *SessionRepository) RefreshSession(ctx context.Context, token string) e
 	now := time.Now()
 	expiresAt := now.Add(sessionDuration)
 
-	sql := `UPDATE sessions SET last_activity = $1, expires_at = $2, updated_at = $1 WHERE refresh_token = $3 AND expires_at > $4`
+	sql := `UPDATE sessions SET last_activity = $1, expires_at = $2 WHERE refresh_token = $3 AND expires_at > $4 AND deleted_at IS NULL`
 
 	result, err := sr.pool.Exec(ctx, sql, now, expiresAt, token, now)
 	if err != nil {
