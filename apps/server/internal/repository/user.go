@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Niiaks/campusCart/internal/model"
@@ -14,6 +16,24 @@ import (
 
 type UserRepository struct {
 	pool *pgxpool.Pool
+}
+
+var slugRegexp = regexp.MustCompile(`[^a-z0-9-]+`)
+
+func slugify(name string) string {
+	s := name
+	// lowercase
+	s = strings.ToLower(s)
+	// replace spaces with dashes
+	s = strings.ReplaceAll(s, " ", "-")
+	// strip invalid chars
+	s = slugRegexp.ReplaceAllString(s, "-")
+	// trim leading/trailing dashes
+	s = strings.Trim(s, "-")
+	if s == "" {
+		return "brand"
+	}
+	return s
 }
 
 type UserRepo interface {
@@ -39,14 +59,15 @@ func (ur *UserRepository) InsertUser(ctx context.Context, user *model.User) erro
 	defer txn.Rollback(ctx)
 
 	userSql := `INSERT INTO users(username,email,password,phone,email_verification_code,email_verification_expires_at) VALUES($1,$2,$3,$4,$5,$6) RETURNING id`
-	brandSql := `INSERT INTO brands(name,seller_id) VALUES($1,$2)`
+	brandSql := `INSERT INTO brands(name, slug, seller_id) VALUES($1,$2,$3)`
 
 	err = txn.QueryRow(ctx, userSql, user.Username, user.Email, user.Password, user.Phone, user.EmailVerificationCode, user.EmailVerificationCodeExpiresAt).Scan(&user.ID)
 	if err != nil {
 		return fmt.Errorf("error creating user: %w", err)
 	}
 
-	_, err = txn.Exec(ctx, brandSql, user.Username, user.ID)
+	slug := slugify(user.Username)
+	_, err = txn.Exec(ctx, brandSql, user.Username, slug, user.ID)
 	if err != nil {
 		return fmt.Errorf("error creating default brand: %w", err)
 	}
