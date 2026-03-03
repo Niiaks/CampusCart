@@ -14,7 +14,7 @@ type Middlewares struct {
 	Authorization   *AuthorizationMiddleware
 }
 
-func NewMiddlewares(s *server.Server, sessionRepo repository.SessionRepo) *Middlewares {
+func NewMiddlewares(s *server.Server, sessionRepo repository.SessionRepo, brandRepo *repository.BrandRepository) *Middlewares {
 
 	var nrApp *newrelic.Application
 
@@ -28,7 +28,7 @@ func NewMiddlewares(s *server.Server, sessionRepo repository.SessionRepo) *Middl
 		Global:          NewGlobalMiddlewares(s),
 		ContextEnhancer: NewContextEnhancer(s),
 		Tracing:         NewTracing(nrApp),
-		Auth:            NewAuthMiddleware(sessionRepo, isProd),
+		Auth:            NewAuthMiddleware(sessionRepo, brandRepo, isProd),
 		Authorization:   NewAuthorizationMiddleware(),
 	}
 }
