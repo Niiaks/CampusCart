@@ -16,18 +16,21 @@ const (
 
 	SessionIDKey = "cc_refresh_token"
 	AuthUserKey  = "auth_user"
+	BrandIDKey   = "brand_id"
 	// Role constants
 	AdminRole = "admin"
 )
 
 type AuthMiddleware struct {
 	sessionRepo repository.SessionRepo
+	brandRepo   *repository.BrandRepository
 	isProd      bool
 }
 
-func NewAuthMiddleware(sessionRepo repository.SessionRepo, isProd bool) *AuthMiddleware {
+func NewAuthMiddleware(sessionRepo repository.SessionRepo, brandRepo *repository.BrandRepository, isProd bool) *AuthMiddleware {
 	return &AuthMiddleware{
 		sessionRepo: sessionRepo,
+		brandRepo:   brandRepo,
 		isProd:      isProd,
 	}
 }
@@ -59,6 +62,14 @@ func (am *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		ctx = context.WithValue(ctx, AuthUserKey, user)
 		ctx = context.WithValue(ctx, UserIDKey, user.ID)
 		ctx = context.WithValue(ctx, UserRoleKey, user.Role)
+
+		if am.brandRepo != nil {
+			brandID, err := am.brandRepo.GetBrandIDBySeller(r.Context(), user.ID)
+			if err != nil {
+				panic(errs.NewUnauthorizedError("brand not found for user", false))
+			}
+			ctx = context.WithValue(ctx, BrandIDKey, brandID)
+		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -102,4 +113,12 @@ func GetAuthUser(ctx context.Context) *model.User {
 		return user
 	}
 	return nil
+}
+
+// GetBrandID retrieves the authenticated user's brand ID from context.
+func GetBrandID(ctx context.Context) string {
+	if id, ok := ctx.Value(BrandIDKey).(string); ok {
+		return id
+	}
+	return ""
 }
