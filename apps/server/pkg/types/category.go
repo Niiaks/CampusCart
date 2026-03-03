@@ -20,3 +20,12 @@ type CategoryResponse struct {
 	IsActive  bool    `json:"is_active"`
 	SortOrder int     `json:"sort_order"`
 }
+
+type CategoryAttributeResponse struct {
+	Name      string   `json:"name"`
+	Label     string   `json:"label"`
+	Type      string   `json:"type"`
+	Options   []string `json:"options,omitempty"`
+	Required  bool     `json:"required"`
+	SortOrder int      `json:"sort_order"`
+}
