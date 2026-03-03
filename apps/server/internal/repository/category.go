@@ -22,6 +22,7 @@ type CategoryRepo interface {
 	GetCategory(ctx context.Context, categoryID string) (*model.Category, error)
 	UpdateCategory(ctx context.Context, categoryID string, updateCategory *types.UpdateCategory) error
 	DeleteCategory(ctx context.Context, categoryID string) error
+	GetCategoryAttributes(ctx context.Context, categoryID string, includeParents bool) ([]model.CategoryAttribute, error)
 }
 
 func NewCategoryRepository(pool *pgxpool.Pool) *CategoryRepository {
@@ -117,6 +118,69 @@ WHERE id = $9 AND deleted_at IS NULL`
 		return fmt.Errorf("category not found or no rows updated")
 	}
 	return nil
+}
+
+// GetCategoryAttributes returns attributes for a category, optionally including ancestors (child wins on name conflicts).
+func (cr *CategoryRepository) GetCategoryAttributes(ctx context.Context, categoryID string, includeParents bool) ([]model.CategoryAttribute, error) {
+	if categoryID == "" {
+		return nil, fmt.Errorf("categoryID is required")
+	}
+
+	var rows pgx.Rows
+	var err error
+
+	if includeParents {
+		query := `
+			WITH RECURSIVE cat AS (
+				SELECT id, parent_id, 0 AS depth FROM categories WHERE id = $1
+				UNION ALL
+				SELECT c.id, c.parent_id, cat.depth + 1 FROM categories c JOIN cat ON c.id = cat.parent_id
+			), attrs AS (
+				SELECT ca.*, cat.depth
+				FROM category_attributes ca
+				JOIN cat ON ca.category_id = cat.id
+			), dedup AS (
+				SELECT DISTINCT ON (name)
+					id, category_id, name, label, type, options, required, sort_order, created_at
+				FROM attrs
+				ORDER BY name, depth ASC, sort_order ASC
+			)
+			SELECT id, category_id, name, label, type, options, required, sort_order, created_at
+			FROM dedup
+			ORDER BY sort_order, name
+		`
+		rows, err = cr.pool.Query(ctx, query, categoryID)
+	} else {
+		query := `
+			SELECT id, category_id, name, label, type, options, required, sort_order, created_at
+			FROM category_attributes
+			WHERE category_id = $1
+			ORDER BY sort_order, name
+		`
+		rows, err = cr.pool.Query(ctx, query, categoryID)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching category attributes: %w", err)
+	}
+	defer rows.Close()
+
+	var attrs []model.CategoryAttribute
+	for rows.Next() {
+		var a model.CategoryAttribute
+		var optionsRaw []byte
+		if err := rows.Scan(&a.ID, &a.CategoryID, &a.Name, &a.Label, &a.Type, &optionsRaw, &a.Required, &a.SortOrder, &a.CreatedAt); err != nil {
+			return nil, fmt.Errorf("error scanning category attribute: %w", err)
+		}
+		a.OptionsRaw = optionsRaw
+		attrs = append(attrs, a)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return attrs, nil
 }
 
 func (cr *CategoryRepository) DeleteCategory(ctx context.Context, categoryID string) error {
