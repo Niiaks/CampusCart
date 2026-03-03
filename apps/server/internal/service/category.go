@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"regexp"
 	"strings"
 
@@ -98,6 +99,32 @@ func (cs *CategoryService) DeleteCategory(ctx context.Context, id string) error 
 		return err
 	}
 	return cs.categoryRepo.DeleteCategory(ctx, id)
+}
+
+// GetCategoryAttributes returns attributes for a category, optionally merged with parent categories.
+func (cs *CategoryService) GetCategoryAttributes(ctx context.Context, categoryID string, includeParents bool) ([]types.CategoryAttributeResponse, error) {
+	attrs, err := cs.categoryRepo.GetCategoryAttributes(ctx, categoryID, includeParents)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := make([]types.CategoryAttributeResponse, 0, len(attrs))
+	for _, a := range attrs {
+		var opts []string
+		if len(a.OptionsRaw) > 0 {
+			_ = json.Unmarshal(a.OptionsRaw, &opts)
+		}
+		resp = append(resp, types.CategoryAttributeResponse{
+			Name:      a.Name,
+			Label:     a.Label,
+			Type:      a.Type,
+			Options:   opts,
+			Required:  a.Required,
+			SortOrder: a.SortOrder,
+		})
+	}
+
+	return resp, nil
 }
 
 var slugRegexp = regexp.MustCompile(`[^a-z0-9-]+`)
