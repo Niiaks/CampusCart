@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -139,6 +140,30 @@ func (ch *CategoryHandler) GetByID() http.HandlerFunc {
 			IsActive:  category.IsActive,
 			SortOrder: category.SortOrder,
 		}, nil
+	}, http.StatusOK, func() *types.EmptyRequest { return &types.EmptyRequest{} })
+}
+
+// GetAttributes returns dynamic attributes for a category (optionally merged with parents).
+func (ch *CategoryHandler) GetAttributes() http.HandlerFunc {
+	return Handle(ch.Handler, func(w http.ResponseWriter, r *http.Request, req *types.EmptyRequest) ([]types.CategoryAttributeResponse, error) {
+		id := chi.URLParam(r, "id")
+		if id == "" {
+			return nil, errs.NewBadRequestError("category ID is required", false, nil, nil, nil)
+		}
+
+		includeParents := true
+		if v := r.URL.Query().Get("include_parents"); v != "" {
+			if b, err := strconv.ParseBool(v); err == nil {
+				includeParents = b
+			}
+		}
+
+		attrs, err := ch.categoryService.GetCategoryAttributes(r.Context(), id, includeParents)
+		if err != nil {
+			return nil, err
+		}
+
+		return attrs, nil
 	}, http.StatusOK, func() *types.EmptyRequest { return &types.EmptyRequest{} })
 }
 
