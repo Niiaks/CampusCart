@@ -63,11 +63,30 @@ func NewRouter(h *handler.Handlers, mw *customMiddleware.Middlewares) chi.Router
 			r.Get("/auth/me", h.Auth.GetCurrentUser())
 		})
 
+		// Brand profile
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.Authenticate)
+			r.Get("/brands/me", h.Brand.GetCurrent())
+			r.Patch("/brands/me", h.Brand.Update())
+		})
+
 		// Public category routes
 		r.Get("/categories", h.Category.GetAll())
 		r.Get("/categories/{id}", h.Category.GetByID())
+		r.Get("/categories/{id}/attributes", h.Category.GetAttributes())
 
-		// Admin routes
+		// Listings
+		r.Get("/listings", h.Listing.List())
+		r.Get("/listings/{id}", h.Listing.Get())
+		r.Group(func(r chi.Router) {
+			r.Use(mw.Auth.Authenticate)
+			r.Post("/listings", h.Listing.Create())
+			r.Patch("/listings/{id}", h.Listing.Update())
+			r.Delete("/listings/{id}", h.Listing.Delete())
+			r.Post("/listings/upload-signature", h.Listing.UploadSignature())
+		})
+
+		// Admin category routes
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth.Authenticate)
 			r.Use(mw.Authorization.Authorize)
