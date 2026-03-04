@@ -59,13 +59,17 @@ func main() {
 	userRepo := repository.NewUserRepository(srv.DB.Pool)
 	sessionRepo := repository.NewSessionRepository(srv.DB.Pool)
 	categoryRepo := repository.NewCategoryRepository(srv.DB.Pool)
+	listingRepo := repository.NewListingRepository(srv.DB.Pool)
+	brandRepo := repository.NewBrandRepository(srv.DB.Pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, sessionRepo, srv.Job)
 	categoryService := service.NewCategoryService(categoryRepo, fileClient)
+	listingService := service.NewListingService(listingRepo, fileClient)
+	brandService := service.NewBrandService(brandRepo, fileClient)
 
-	h := handler.NewHandlers(srv, authService, categoryService)
-	mw := middleware.NewMiddlewares(srv, sessionRepo)
+	h := handler.NewHandlers(srv, authService, categoryService, listingService, brandService)
+	mw := middleware.NewMiddlewares(srv, sessionRepo, brandRepo)
 	r := router.NewRouter(h, mw)
 
 	srv.SetupHTTPServer(r)
