@@ -36,9 +36,9 @@ func (r *ListingRepository) CreateListing(ctx context.Context, listing *model.Li
 	sql := `
 		INSERT INTO listings (
 			brand_id, category_id, title, description, price, condition, 
-			negotiable, attributes, image_urls, video_urls, is_active, is_promoted
+			negotiable, attributes, image_urls, video_urls, is_active
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 		) RETURNING id, created_at, updated_at, views_count
 	`
 	err := r.pool.QueryRow(ctx, sql,
@@ -53,7 +53,6 @@ func (r *ListingRepository) CreateListing(ctx context.Context, listing *model.Li
 		listing.ImageUrls,
 		listing.VideoUrls,
 		listing.IsActive,
-		listing.IsPromoted,
 	).Scan(
 		&listing.ID,
 		&listing.CreatedAt,
@@ -109,7 +108,7 @@ func (r *ListingRepository) GetListingByID(ctx context.Context, id string) (*mod
 	return &listing, nil
 }
 
-// UpdateListing applies partial updates to a listing using COALESCE.
+// UpdateListing applies partial updates to a listing
 func (r *ListingRepository) UpdateListing(ctx context.Context, id string, update *types.UpdateListing) error {
 	sql := `
 		UPDATE listings
@@ -190,55 +189,83 @@ func (r *ListingRepository) IncrementViews(ctx context.Context, id string) error
 
 // List returns a slice of active listings with optional filtering and pagination.
 func (r *ListingRepository) List(ctx context.Context, filter types.ListingFilter) ([]model.Listing, error) {
-	// Base query
+	prefix := ""
 	query := `
 		SELECT 
-			id, brand_id, category_id, title, description, price, condition, 
-			negotiable, attributes, image_urls, video_urls, is_active, is_promoted, 
-			views_count, created_at, updated_at
-		FROM listings
-		WHERE deleted_at IS NULL AND is_active = TRUE
+			l.id, l.brand_id, l.category_id, l.title, l.description, l.price, l.condition, 
+			l.negotiable, l.attributes, l.image_urls, l.video_urls, l.is_active, l.is_promoted, 
+			l.views_count, l.created_at, l.updated_at
+		FROM listings l
 	`
 
-	// Dynamic filtering
+	joins := ""
+	where := "WHERE l.deleted_at IS NULL AND l.is_active = TRUE"
 	args := []interface{}{}
 	argIndex := 1
 
-	if filter.CategoryID != "" {
-		query += fmt.Sprintf(" AND category_id = $%d", argIndex)
+	if filter.IncludeDescendants && filter.CategoryID != "" {
+		prefix = fmt.Sprintf(`
+		WITH cat_tree AS (
+			SELECT id FROM categories WHERE id = $%d
+			UNION ALL
+			SELECT c.id FROM categories c JOIN cat_tree ct ON c.parent_id = ct.id
+		)
+		`, argIndex)
 		args = append(args, filter.CategoryID)
 		argIndex++
 	}
 
+	if filter.BrandName != "" {
+		joins += " JOIN brands b ON b.id = l.brand_id AND b.deleted_at IS NULL"
+		where += fmt.Sprintf(" AND (b.name ILIKE $%d OR b.slug ILIKE $%d)", argIndex, argIndex+1)
+		pattern := "%" + filter.BrandName + "%"
+		args = append(args, pattern, pattern)
+		argIndex += 2
+	}
+
+	if filter.CategoryID != "" {
+		if filter.IncludeDescendants {
+			where += " AND l.category_id IN (SELECT id FROM cat_tree)"
+		} else {
+			where += fmt.Sprintf(" AND l.category_id = $%d", argIndex)
+			args = append(args, filter.CategoryID)
+			argIndex++
+		}
+	}
+
 	if filter.BrandID != "" {
-		query += fmt.Sprintf(" AND brand_id = $%d", argIndex)
+		where += fmt.Sprintf(" AND l.brand_id = $%d", argIndex)
 		args = append(args, filter.BrandID)
+		argIndex++
+	}
+
+	if filter.MinPrice != nil {
+		where += fmt.Sprintf(" AND l.price >= $%d", argIndex)
 		args = append(args, *filter.MinPrice)
 		argIndex++
 	}
 
 	if filter.MaxPrice != nil {
-		query += fmt.Sprintf(" AND price <= $%d", argIndex)
+		where += fmt.Sprintf(" AND l.price <= $%d", argIndex)
 		args = append(args, *filter.MaxPrice)
 		argIndex++
 	}
 
 	if filter.Condition != "" {
-		query += fmt.Sprintf(" AND condition = $%d", argIndex)
+		where += fmt.Sprintf(" AND l.condition = $%d", argIndex)
 		args = append(args, filter.Condition)
 		argIndex++
 	}
 
 	if filter.Search != "" {
-		query += fmt.Sprintf(" AND (title ILIKE $%d OR description ILIKE $%d)", argIndex, argIndex)
+		where += fmt.Sprintf(" AND (l.title ILIKE $%d OR l.description ILIKE $%d)", argIndex, argIndex)
 		args = append(args, "%"+filter.Search+"%")
 		argIndex++
 	}
 
-	query += " ORDER BY is_promoted DESC, created_at DESC"
+	query = prefix + query + joins + " " + where + " ORDER BY l.is_promoted DESC, l.created_at DESC"
 
-	// Pagination
-	limit := 20 // Default limit
+	limit := 20
 	if filter.Limit > 0 {
 		limit = filter.Limit
 	}
