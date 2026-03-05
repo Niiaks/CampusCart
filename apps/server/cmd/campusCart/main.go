@@ -21,7 +21,7 @@ import (
 	"github.com/cloudinary/cloudinary-go/v2"
 )
 
-const DefaultContextTimeout = 30
+const DefaultContextTimeout = 10
 
 func main() {
 
@@ -61,14 +61,16 @@ func main() {
 	categoryRepo := repository.NewCategoryRepository(srv.DB.Pool)
 	listingRepo := repository.NewListingRepository(srv.DB.Pool)
 	brandRepo := repository.NewBrandRepository(srv.DB.Pool)
+	savedRepo := repository.NewSavedRepository(srv.DB.Pool)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo, sessionRepo, srv.Job)
 	categoryService := service.NewCategoryService(categoryRepo, fileClient)
 	listingService := service.NewListingService(listingRepo, fileClient)
 	brandService := service.NewBrandService(brandRepo, fileClient)
+	savedService := service.NewSavedService(savedRepo)
 
-	h := handler.NewHandlers(srv, authService, categoryService, listingService, brandService)
+	h := handler.NewHandlers(srv, authService, categoryService, listingService, brandService, savedService)
 	mw := middleware.NewMiddlewares(srv, sessionRepo, brandRepo)
 	r := router.NewRouter(h, mw)
 
