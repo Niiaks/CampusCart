@@ -1,0 +1,314 @@
+{
+  "paths": {
+    "/listings": {
+      "get": {
+        "tags": ["Listing"],
+        "summary": "List listings",
+        "description": "Returns listings with optional filters and pagination.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category_id",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "brand_id",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "include_descendants",
+            "schema": { "type": "boolean", "default": false },
+            "description": "When true, include listings from child categories of the given category_id"
+          },
+          {
+            "in": "query",
+            "name": "brand",
+            "schema": { "type": "string" },
+            "description": "Filter by brand name (alias: brand_name)"
+          },
+          { "in": "query", "name": "search", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "condition",
+            "schema": { "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "min_price",
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "in": "query",
+            "name": "max_price",
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of listings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "../schemas/listing.json#/components/schemas/Listing"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Listing"],
+        "summary": "Create listing",
+        "description": "Creates a listing for the authenticated seller's brand. Brand is derived from the session; the client must not send brand_id.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/listing.json#/components/schemas/CreateListingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Listing created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/listing.json#/components/schemas/Listing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}": {
+      "get": {
+        "tags": ["Listing"],
+        "summary": "Get listing",
+        "description": "Fetch a listing by ID and increment its view counter.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/listing.json#/components/schemas/Listing"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Listing"],
+        "summary": "Update listing",
+        "description": "Partially update a listing. Only the owning brand (via session) can update.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/listing.json#/components/schemas/UpdateListingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Listing updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/listing.json#/components/schemas/Listing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Listing"],
+        "summary": "Delete listing",
+        "description": "Soft delete a listing owned by the authenticated seller's brand.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/upload-signature": {
+      "post": {
+        "tags": ["Listing"],
+        "summary": "Direct upload signature",
+        "description": "Returns signed upload parameters for Cloudinary direct uploads.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/listing.json#/components/schemas/UploadSignatureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signature generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/listing.json#/components/schemas/DirectUploadSignatureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

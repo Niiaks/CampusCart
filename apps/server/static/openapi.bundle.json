@@ -1,0 +1,1348 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "campusCart API",
+    "description": "The student marketplace API for campusCart. Buy and sell textbooks, electronics, dorm essentials and more.",
+    "version": "1.0.0",
+    "contact": { "name": "campusCart Team" }
+  },
+  "servers": [{ "url": "/api/v1", "description": "API v1" }],
+  "tags": [
+    { "name": "Health", "description": "Service health checks" },
+    { "name": "Auth", "description": "Authentication & session management" },
+    { "name": "Category", "description": "Category management" },
+    {
+      "name": "Listing",
+      "description": "Listing browse and seller operations"
+    },
+    { "name": "Brand", "description": "Brand profile for sellers" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Check service health",
+        "description": "Returns the health status of the API, database, and Redis connections.",
+        "operationId": "checkHealth",
+        "responses": {
+          "200": {
+            "description": "All services healthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more services unhealthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "description": "Creates a new user account and sends a verification code to the provided email. The user must verify their email before they can log in.",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully, verification email sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or bad request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify-email": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Verify email address",
+        "description": "Verifies the user's email with the 6-digit code sent during registration. On success, creates a session and returns user data with a session cookie.",
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VerifyEmailRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified, session created",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Session cookie (cc_refresh_token)",
+                "schema": {
+                  "type": "string",
+                  "example": "cc_refresh_token=abc123; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or expired verification code",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login",
+        "description": "Authenticates a user with email and password. Returns user data and sets a session cookie.",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Session cookie (cc_refresh_token)",
+                "schema": {
+                  "type": "string",
+                  "example": "cc_refresh_token=abc123; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RateLimitError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout",
+        "description": "Invalidates the current session and clears the session cookie. Requires authentication.",
+        "operationId": "logout",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "204": {
+            "description": "Logged out successfully",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cleared session cookie",
+                "schema": {
+                  "type": "string",
+                  "example": "cc_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=-1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get current user",
+        "description": "Returns the currently authenticated user's profile. Requires authentication.",
+        "operationId": "getCurrentUser",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/brands/me": {
+      "get": {
+        "tags": ["Brand"],
+        "summary": "Get my brand",
+        "description": "Returns the authenticated seller's brand profile.",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Brand profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Brand" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Brand"],
+        "summary": "Update my brand",
+        "description": "Update brand profile fields and optionally upload profile/banner images. Accepts multipart/form-data or JSON.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "profile_image": { "type": "string", "format": "binary" },
+                  "banner_image": { "type": "string", "format": "binary" }
+                }
+              }
+            },
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateBrandRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Brand updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Brand" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Category"],
+        "summary": "Get all categories",
+        "description": "Returns a list of all active categories. Public route.",
+        "operationId": "getCategories",
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CategoryResponse" }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Category"],
+        "summary": "Create a new category",
+        "description": "Creates a new category. Requires admin role and authenticated session. Uses multipart/form-data for file upload.",
+        "operationId": "createCategory",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/CreateCategoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request / Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "get": {
+        "tags": ["Category"],
+        "summary": "Get category by ID",
+        "description": "Returns a single category by its ID. Public route.",
+        "operationId": "getCategoryById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Category"],
+        "summary": "Update a category",
+        "description": "Partially updates a category. Requires admin role and authenticated session. Supports optional image upload via multipart/form-data.",
+        "operationId": "updateCategory",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/UpdateCategoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request / Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Category"],
+        "summary": "Delete a category",
+        "description": "Soft deletes a category by ID. Requires admin role and authenticated session.",
+        "operationId": "deleteCategory",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Category deleted" },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories/{id}/attributes": {
+      "get": {
+        "tags": ["Category"],
+        "summary": "Get category attributes",
+        "description": "Returns dynamic attributes for a category. When include_parents=true, merges inherited attributes from parent categories (child overrides on name conflicts).",
+        "operationId": "getCategoryAttributes",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "include_parents",
+            "in": "query",
+            "schema": { "type": "boolean", "default": true },
+            "description": "Include attributes from ancestor categories"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Attributes for the category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryAttribute"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Category not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings": {
+      "get": {
+        "tags": ["Listing"],
+        "summary": "List listings",
+        "description": "Returns listings with optional filters and pagination.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category_id",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "brand_id",
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "in": "query",
+            "name": "brand",
+            "schema": { "type": "string" },
+            "description": "Filter by brand name (alias: brand_name)"
+          },
+          { "in": "query", "name": "search", "schema": { "type": "string" } },
+          {
+            "in": "query",
+            "name": "condition",
+            "schema": { "type": "string" }
+          },
+          {
+            "in": "query",
+            "name": "min_price",
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "in": "query",
+            "name": "max_price",
+            "schema": { "type": "integer", "format": "int64" }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of listings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Listing" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Listing"],
+        "summary": "Create listing",
+        "description": "Creates a listing for the authenticated seller's brand. Brand is derived from the session; the client must not send brand_id.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateListingRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Listing created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Listing" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/{id}": {
+      "get": {
+        "tags": ["Listing"],
+        "summary": "Get listing",
+        "description": "Fetch a listing by ID and increment its view counter.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Listing" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Listing"],
+        "summary": "Update listing",
+        "description": "Partially update a listing. Only the owning brand (via session) can update.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateListingRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Listing updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Listing" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Listing"],
+        "summary": "Delete listing",
+        "description": "Soft delete a listing owned by the authenticated seller's brand.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Deleted" },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found or not owned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listings/upload-signature": {
+      "post": {
+        "tags": ["Listing"],
+        "summary": "Direct upload signature",
+        "description": "Returns signed upload parameters for Cloudinary direct uploads.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadSignatureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signature generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectUploadSignatureResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "cc_refresh_token",
+        "description": "Session cookie set on login/register. HttpOnly, 7-day expiry."
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "example": "securePass123"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/UserResponse" }
+        },
+        "required": ["user"]
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["username", "email", "password"]
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "registration successful, please check your email for a verification code"
+          }
+        },
+        "required": ["message"]
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "example": "482913"
+          }
+        },
+        "required": ["email", "code"]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "username": { "type": "string", "example": "kwame_asante" },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "kwame@ug.edu.gh"
+          },
+          "phone": { "type": "string", "example": "0241234567" },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin"],
+            "example": "user"
+          },
+          "email_verified": { "type": "boolean", "example": false },
+          "phone_verified": { "type": "boolean", "example": false },
+          "is_active": { "type": "boolean", "example": true },
+          "last_active": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-02-15T12:00:00Z"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-01-01T00:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "phone",
+          "role",
+          "last_active",
+          "created_at"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "example": "BAD_REQUEST" },
+          "message": {
+            "type": "string",
+            "example": "Validation failed: email is required"
+          },
+          "status": { "type": "integer", "example": 400 },
+          "override": { "type": "boolean", "example": false },
+          "errors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FieldError" },
+            "description": "Field-level validation errors (optional)"
+          },
+          "action": { "$ref": "#/components/schemas/Action" }
+        },
+        "required": ["code", "message", "status", "override"]
+      },
+      "FieldError": {
+        "type": "object",
+        "properties": {
+          "field": { "type": "string", "example": "email" },
+          "error": { "type": "string", "example": "email is required" }
+        },
+        "required": ["field", "error"]
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["redirect"],
+            "example": "redirect"
+          },
+          "message": {
+            "type": "string",
+            "example": "Please verify your email"
+          },
+          "value": { "type": "string", "example": "/verify-email" }
+        },
+        "required": ["type", "message", "value"]
+      },
+      "RateLimitError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Rate-limited. Please, slow down."
+          }
+        },
+        "required": ["error"]
+      },
+      "CategoryAttribute": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "storage" },
+          "label": { "type": "string", "example": "Storage (GB)" },
+          "type": { "type": "string", "example": "number" },
+          "options": { "type": "array", "items": { "type": "string" } },
+          "required": { "type": "boolean", "example": true },
+          "sort_order": { "type": "integer", "example": 1 }
+        },
+        "required": ["name", "label", "type", "required", "sort_order"]
+      },
+      "Listing": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "brand_id": { "type": "string", "format": "uuid" },
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "example": "MacBook Pro 14" },
+          "description": {
+            "type": "string",
+            "example": "M3 Pro, 16GB RAM, 512GB SSD"
+          },
+          "price": { "type": "integer", "format": "int64", "example": 120000 },
+          "condition": { "type": "string", "example": "used_good" },
+          "negotiable": { "type": "boolean", "example": true },
+          "attributes": { "type": "object", "additionalProperties": {} },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" },
+            "minItems": 1
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean", "example": true },
+          "is_promoted": { "type": "boolean", "example": false },
+          "views_count": { "type": "integer", "example": 12 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "brand_id",
+          "category_id",
+          "title",
+          "description",
+          "price",
+          "condition",
+          "negotiable",
+          "image_urls",
+          "is_active",
+          "is_promoted",
+          "views_count",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateListingRequest": {
+        "type": "object",
+        "properties": {
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "example": "MacBook Pro 14" },
+          "description": {
+            "type": "string",
+            "example": "Lightly used, includes charger"
+          },
+          "price": { "type": "integer", "format": "int64", "example": 120000 },
+          "condition": { "type": "string", "example": "used_good" },
+          "negotiable": { "type": "boolean", "example": true },
+          "attributes": { "type": "object", "additionalProperties": {} },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" },
+            "minItems": 1
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean", "example": true }
+        },
+        "required": [
+          "category_id",
+          "title",
+          "description",
+          "price",
+          "condition",
+          "negotiable",
+          "image_urls",
+          "is_active"
+        ]
+      },
+      "UpdateListingRequest": {
+        "type": "object",
+        "properties": {
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "integer", "format": "int64" },
+          "condition": { "type": "string" },
+          "negotiable": { "type": "boolean" },
+          "attributes": { "type": "object", "additionalProperties": {} },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "UploadSignatureRequest": {
+        "type": "object",
+        "properties": {
+          "folder": { "type": "string", "example": "listing" },
+          "resource_type": {
+            "type": "string",
+            "enum": ["image", "video", "auto"],
+            "example": "image"
+          }
+        }
+      },
+      "DirectUploadSignatureResponse": {
+        "type": "object",
+        "properties": {
+          "upload_url": { "type": "string", "format": "uri" },
+          "params": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "required": ["upload_url", "params"]
+      },
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "seller_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "Campus Closet" },
+          "slug": { "type": "string", "example": "campus-closet" },
+          "description": {
+            "type": "string",
+            "example": "The go-to spot for dorm essentials."
+          },
+          "profile_url": { "type": "string", "format": "uri" },
+          "banner_url": { "type": "string", "format": "uri" },
+          "is_verified": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "seller_id",
+          "name",
+          "slug",
+          "is_verified",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateBrandRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Campus Closet" },
+          "description": {
+            "type": "string",
+            "example": "The go-to spot for dorm essentials."
+          }
+        }
+      },
+      "UpdateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Electronics",
+            "description": "Category display name"
+          },
+          "parent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional parent category"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Optional image file (jpeg/png)"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Visibility toggle"
+          },
+          "sort_order": {
+            "type": "integer",
+            "description": "Order among siblings"
+          }
+        }
+      },
+      "CreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Textbooks",
+            "description": "The name of the category"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Category icon image file (max 2MB, jpeg/png)."
+          }
+        },
+        "required": ["name", "image"]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "parent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "example": null,
+            "description": "UUID of the parent category, null if this is a top-level category."
+          },
+          "name": { "type": "string", "example": "Textbooks" },
+          "slug": { "type": "string", "example": "textbooks" },
+          "icon": {
+            "type": "string",
+            "example": "https://res.cloudinary.com/demo/image/upload/v1592504992/sample.jpg"
+          },
+          "public_id": {
+            "type": "string",
+            "example": "category_icons/textbooks_abc123"
+          },
+          "is_active": { "type": "boolean", "example": true },
+          "sort_order": { "type": "integer", "example": 0 }
+        },
+        "required": [
+          "category_id",
+          "name",
+          "slug",
+          "icon",
+          "public_id",
+          "is_active",
+          "sort_order"
+        ]
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": { "status": { "type": "string" } }
+      }
+    }
+  }
+}

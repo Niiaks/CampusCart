@@ -1,0 +1,43 @@
+{
+  "components": {
+    "schemas": {
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "seller_id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "example": "Campus Closet" },
+          "slug": { "type": "string", "example": "campus-closet" },
+          "description": {
+            "type": "string",
+            "example": "The go-to spot for dorm essentials."
+          },
+          "profile_url": { "type": "string", "format": "uri" },
+          "banner_url": { "type": "string", "format": "uri" },
+          "is_verified": { "type": "boolean" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "seller_id",
+          "name",
+          "slug",
+          "is_verified",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "UpdateBrandRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "example": "Campus Closet" },
+          "description": {
+            "type": "string",
+            "example": "The go-to spot for dorm essentials."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "components": {
+    "schemas": {
+      "Listing": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "brand_id": { "type": "string", "format": "uuid" },
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "example": "MacBook Pro 14" },
+          "description": {
+            "type": "string",
+            "example": "M3 Pro, 16GB RAM, 512GB SSD"
+          },
+          "price": { "type": "integer", "format": "int64", "example": 120000 },
+          "condition": { "type": "string", "example": "used_good" },
+          "negotiable": { "type": "boolean", "example": true },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" },
+            "minItems": 1
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean", "example": true },
+          "is_promoted": { "type": "boolean", "example": false },
+          "views_count": { "type": "integer", "example": 12 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "brand_id",
+          "category_id",
+          "title",
+          "description",
+          "price",
+          "condition",
+          "negotiable",
+          "image_urls",
+          "is_active",
+          "is_promoted",
+          "views_count",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "CreateListingRequest": {
+        "type": "object",
+        "properties": {
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "example": "MacBook Pro 14" },
+          "description": {
+            "type": "string",
+            "example": "Lightly used, includes charger"
+          },
+          "price": { "type": "integer", "format": "int64", "example": 120000 },
+          "condition": { "type": "string", "example": "used_good" },
+          "negotiable": { "type": "boolean", "example": true },
+          "attributes": { "type": "object", "additionalProperties": {} },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" },
+            "minItems": 1
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean", "example": true }
+        },
+        "required": [
+          "category_id",
+          "title",
+          "description",
+          "price",
+          "condition",
+          "negotiable",
+          "image_urls",
+          "is_active"
+        ]
+      },
+      "UpdateListingRequest": {
+        "type": "object",
+        "properties": {
+          "category_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "integer", "format": "int64" },
+          "condition": { "type": "string" },
+          "negotiable": { "type": "boolean" },
+          "attributes": { "type": "object", "additionalProperties": {} },
+          "image_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "video_urls": {
+            "type": "array",
+            "items": { "type": "string", "format": "uri" }
+          },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "UploadSignatureRequest": {
+        "type": "object",
+        "properties": {
+          "folder": { "type": "string", "example": "listing" },
+          "resource_type": {
+            "type": "string",
+            "enum": ["image", "video", "auto"],
+            "example": "image"
+          }
+        }
+      },
+      "DirectUploadSignatureResponse": {
+        "type": "object",
+        "properties": {
+          "upload_url": { "type": "string", "format": "uri" },
+          "params": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "required": ["upload_url", "params"]
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "paths": {
+    "/brands/me": {
+      "get": {
+        "tags": ["Brand"],
+        "summary": "Get my brand",
+        "description": "Returns the authenticated seller's brand profile.",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": {
+            "description": "Brand profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/brand.json#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Brand"],
+        "summary": "Update my brand",
+        "description": "Update brand profile fields and optionally upload profile/banner images. Accepts multipart/form-data or JSON.",
+        "security": [{ "sessionCookie": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "profile_image": { "type": "string", "format": "binary" },
+                  "banner_image": { "type": "string", "format": "binary" }
+                }
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "../schemas/brand.json#/components/schemas/UpdateBrandRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Brand updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/brand.json#/components/schemas/Brand"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../../openapi.json#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
