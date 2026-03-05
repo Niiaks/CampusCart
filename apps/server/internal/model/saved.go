@@ -9,4 +9,7 @@ type Saved struct {
 	UserID    string `json:"user_id" validate:"required"`    // owner user id
 	ListingID string `json:"listing_id" validate:"required"` // saved listing id
 	Model
+
+	// Populated via JOIN
+	Listing *Listing `json:"listing,omitempty"`
 }
