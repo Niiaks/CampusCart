@@ -12,6 +12,7 @@ type Service struct {
 	Category *CategoryService
 	Listing  *ListingService
 	Brand    *BrandService
+	Saved    *SavedService
 }
 
 func NewServices(repo *repository.Repository, job *job.JobService, file *file.Client) *Service {
@@ -19,11 +20,14 @@ func NewServices(repo *repository.Repository, job *job.JobService, file *file.Cl
 	categoryService := NewCategoryService(repo.Category, file)
 	listingService := NewListingService(repo.Listing, file)
 	brandService := NewBrandService(repo.Brand, file)
+	savedService := NewSavedService(repo.Saved)
+
 	return &Service{
 		Auth:     authService,
 		Job:      job,
 		Category: categoryService,
 		Listing:  listingService,
 		Brand:    brandService,
+		Saved:    savedService,
 	}
 }
