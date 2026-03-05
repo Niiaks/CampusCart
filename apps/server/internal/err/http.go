@@ -53,6 +53,28 @@ func (e *HTTPError) WithMessage(message string) *HTTPError {
 	}
 }
 
+func (e *HTTPError) WithAction(action *Action) *HTTPError {
+	return &HTTPError{
+		Code:     e.Code,
+		Message:  e.Message,
+		Status:   e.Status,
+		Override: e.Override,
+		Errors:   e.Errors,
+		Action:   action,
+	}
+}
+
+func (e *HTTPError) WithFieldErrors(errors []FieldError) *HTTPError {
+	return &HTTPError{
+		Code:     e.Code,
+		Message:  e.Message,
+		Status:   e.Status,
+		Override: e.Override,
+		Errors:   errors,
+		Action:   e.Action,
+	}
+}
+
 func MakeUpperCaseWithUnderscores(str string) string {
 	return strings.ToUpper(strings.ReplaceAll(str, " ", "_"))
 }
