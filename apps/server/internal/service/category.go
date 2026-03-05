@@ -30,8 +30,8 @@ func (cs *CategoryService) CreateCategory(ctx context.Context, category *model.C
 		return err
 	}
 
-	category.PublicID = id
-	category.Icon = url
+	category.PublicID = &id
+	category.Icon = &url
 	if category.Slug == "" {
 		category.Slug = slugify(category.Name)
 	}
@@ -69,8 +69,8 @@ func (cs *CategoryService) UpdateCategory(ctx context.Context, id string, update
 		update.Icon = &url
 		update.PublicID = &publicID
 
-		if existingCategory.PublicID != "" {
-			_ = cs.file.DeleteFile(ctx, existingCategory.PublicID, "image")
+		if existingCategory.PublicID != nil && *existingCategory.PublicID != "" {
+			_ = cs.file.DeleteFile(ctx, *existingCategory.PublicID, "image")
 		}
 	}
 
@@ -93,10 +93,10 @@ func (cs *CategoryService) DeleteCategory(ctx context.Context, id string) error 
 		return err
 	}
 
-	err = cs.file.DeleteFile(ctx, cat.PublicID,
-		"image")
-	if err != nil {
-		return err
+	if cat.PublicID != nil && *cat.PublicID != "" {
+		if err = cs.file.DeleteFile(ctx, *cat.PublicID, "image"); err != nil {
+			return err
+		}
 	}
 	return cs.categoryRepo.DeleteCategory(ctx, id)
 }
