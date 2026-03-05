@@ -8,6 +8,7 @@ type Repository struct {
 	Brand    *BrandRepository
 	Category *CategoryRepository
 	Listing  *ListingRepository
+	Saved    *SavedRepository
 }
 
 func NewRepository(pool *pgxpool.Pool) *Repository {
@@ -17,5 +18,6 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 		Brand:    NewBrandRepository(pool),
 		Category: NewCategoryRepository(pool),
 		Listing:  NewListingRepository(pool),
+		Saved:    NewSavedRepository(pool),
 	}
 }
