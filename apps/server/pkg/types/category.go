@@ -15,8 +15,8 @@ type CategoryResponse struct {
 	ParentID  *string `json:"parent_id,omitempty"`
 	Name      string  `json:"name" validate:"required"`
 	Slug      string  `json:"slug" validate:"required"`
-	Icon      string  `json:"icon" validate:"required"`
-	PublicID  string  `json:"public_id" validate:"required"`
+	Icon      *string `json:"icon,omitempty"`
+	PublicID  *string `json:"public_id,omitempty"`
 	IsActive  bool    `json:"is_active"`
 	SortOrder int     `json:"sort_order"`
 }
