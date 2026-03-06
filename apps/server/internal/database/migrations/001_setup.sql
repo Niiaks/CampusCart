@@ -7,6 +7,8 @@ CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE listing_condition AS ENUM ('new', 'used', 'second-hand');
 CREATE TYPE media_type AS ENUM ('photo', 'video');
 CREATE TYPE feedback_type AS ENUM ('suggestion', 'bug', 'other');
+CREATE TYPE report_entity_type AS ENUM ('listing', 'user');
+CREATE TYPE report_reason AS ENUM ('spam', 'inappropriate', 'scam', 'fake', 'offensive', 'other');
 
 -- Generic trigger to bump updated_at on row changes
 CREATE OR REPLACE FUNCTION set_updated_at()

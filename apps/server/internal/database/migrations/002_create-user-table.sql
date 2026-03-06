@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     phone_verification_code VARCHAR(6),
     email_verification_expires_at TIMESTAMPTZ,
     phone_verification_expires_at TIMESTAMPTZ,
+    password_reset_code VARCHAR(6),
+    password_reset_expires_at TIMESTAMPTZ,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     is_banned BOOLEAN NOT NULL DEFAULT FALSE,
     last_active TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -23,6 +25,7 @@ CREATE INDEX idx_users_email ON users (email);
 CREATE INDEX idx_users_username ON users (username);
 CREATE INDEX idx_users_role ON users (role);
 CREATE INDEX idx_users_is_active ON users (is_active);
+CREATE INDEX idx_users_password_reset_code ON users (password_reset_code);
 CREATE TRIGGER trg_users_set_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW

@@ -1,18 +1,20 @@
 CREATE TABLE IF NOT EXISTS conversations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    listing_id UUID REFERENCES listings(id) ON DELETE SET NULL,
     buyer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    brand_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     last_message TEXT,
     last_message_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    buyer_last_read_at  TIMESTAMPTZ,
+    brand_last_read_at  TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    UNIQUE(buyer_id,brand_id)
 );
 
-CREATE INDEX idx_conversations_listing_id ON conversations (listing_id);
 CREATE INDEX idx_conversations_buyer_id ON conversations (buyer_id);
-CREATE INDEX idx_conversations_seller_id ON conversations (seller_id);
+CREATE INDEX idx_conversations_brand_id ON conversations (brand_id);
 CREATE INDEX idx_conversations_last_message_at ON conversations (last_message_at DESC);
 CREATE TRIGGER trg_conversations_set_updated_at
     BEFORE UPDATE ON conversations
@@ -23,7 +25,6 @@ CREATE TABLE IF NOT EXISTS messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    recipient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     listing_id UUID REFERENCES listings(id) ON DELETE SET NULL,
     content TEXT NOT NULL,
     media_url TEXT,
@@ -31,7 +32,6 @@ CREATE TABLE IF NOT EXISTS messages (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     CHECK ((media_url IS NULL AND media_type IS NULL) OR (media_url IS NOT NULL AND media_type IS NOT NULL)),
     sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    read_at TIMESTAMPTZ,
     deleted_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
